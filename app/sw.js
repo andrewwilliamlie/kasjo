@@ -1,5 +1,5 @@
 /* Kasjo offline cache. Bump VERSION on every release of index.html. */
-const VERSION = "kasjo-v3";
+const VERSION = "kasjo-v4";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
