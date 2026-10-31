@@ -249,6 +249,15 @@ tfoot td{font-weight:700}
 .plan .main{flex:1;min-width:0}.plan .nm{font-weight:700;font-size:16px}.plan .pr{font-family:var(--f-display);font-weight:700;font-size:20px;color:var(--brand);font-variant-numeric:tabular-nums}
 .plan.best{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 25%,transparent)}
 .bill-amt{font-family:var(--f-display);font-weight:700;font-size:32px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.nav a{position:relative}
+.nav a .badge{position:absolute;top:0;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;line-height:1}
+.alert{padding:12px 14px;display:flex;gap:10px;align-items:center;text-align:left;width:100%}
+.alert.warn{border-color:var(--warn);background:var(--warn-soft)}.alert.bad{border-color:var(--bad);background:var(--bad-soft)}
+.alert .txt{flex:1;min-width:0;font-size:13.5px}.alert .txt b{display:block;font-size:14px}
+.lowbal{color:var(--warn)!important}
+.remind{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}.remind:first-child{border-top:0}
+.remind .main{flex:1;min-width:0}.remind .btn{padding:8px 12px;font-size:13px;flex:none;text-decoration:none}
+.btn.wa{background:#1f9d55;color:#fff}
 .pill.sync{border:0;margin-top:3px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .auth-err{background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600}
 .tempin{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px;font-weight:600}
@@ -263,7 +272,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.4.1';
+const APP_VERSION='1.5.0';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -326,6 +335,25 @@ function subBanner(){
   return'';
 }
 function subLabel(){const t=tokoInfo();if(t.active==null)return'';if(!t.active)return'Habis sejak '+fDate(t.until)+' · hanya lihat data';return (t.status==='trial'?'Uji coba gratis':'Aktif')+' s/d '+fDate(t.until)+' · '+t.daysLeft+' hari lagi'}
+// ---- saldo minimum ----
+function lowBalances(bal){bal=bal||balances();return(state.cfg?state.cfg.accounts:[]).filter(a=>a.min>0&&(bal[a.id]||0)<a.min).map(a=>({a,bal:bal[a.id]||0}))}
+function warnIfCrossed(before){
+  const after=balances(),crossed=(state.cfg?state.cfg.accounts:[]).filter(a=>a.min>0&&(before[a.id]||0)>=a.min&&(after[a.id]||0)<a.min);
+  if(crossed.length)setTimeout(()=>toast('Perhatian: saldo '+crossed.map(a=>a.name+' '+rp(after[a.id]||0)).join(', ')+' di bawah batas minimum'),1200);
+}
+// ---- pengingat kasbon ----
+const DAY=86400000;
+function kbDue(){const tomorrow=dayKey(Date.now()+DAY);return state.kasbon.map(k=>Object.assign({k},kasbonStats(k))).filter(x=>x.sisa>0&&x.k.due&&x.k.due<=tomorrow).sort((a,b)=>a.k.due<b.k.due?-1:1)}
+function dueWhen(due){const today=dayKey(Date.now());if(due<today){const n=Math.round((new Date(today+'T00:00')-new Date(due+'T00:00'))/DAY);return{cls:'bad',txt:'Lewat '+n+' hari',msg:', sudah lewat jatuh tempo '+fDate(new Date(due+'T00:00'))}}
+  if(due===today)return{cls:'warn',txt:'Hari ini',msg:', jatuh tempo hari ini'};return{cls:'neu',txt:'Besok',msg:', jatuh tempo besok ('+fDate(new Date(due+'T00:00'))+')'}}
+function waNumber(ph){const d=String(ph||'').replace(/\D/g,'');if(d.length<9)return'';return d.startsWith('0')?'62'+d.slice(1):d.startsWith('8')?'62'+d:d}
+function kbWaLink(k,s){const n=waNumber(k.phone);if(!n)return'';const w=k.due?dueWhen(k.due).msg:'';
+  return 'https://wa.me/'+n+'?text='+encodeURIComponent(`Halo ${k.name}, ini pengingat dari ${state.cfg.name}. Kasbon Anda masih ${rp(s.sisa)}${w}. Mohon dibayar ya. Terima kasih.`)}
+function reminded(){try{return JSON.parse(localStorage.getItem('kasjo-reminded')||'{}')||{}}catch(e){return{}}}
+function markReminded(id){const r=reminded();r[id]=dayKey(Date.now());try{localStorage.setItem('kasjo-reminded',JSON.stringify(r))}catch(e){}}
+function remindRow(x){const k=x.k,w=dueWhen(k.due),link=kbWaLink(k,x),done=reminded()[k.id]===dayKey(Date.now());
+  return `<div class="remind"><span class="ic ${w.cls==='bad'?'bad':'out'}">${esc((k.name||'?').slice(0,2).toUpperCase())}</span><span class="main"><span class="t" style="display:block;font-weight:600">${esc(k.name)} · ${rp(x.sisa)}</span><span style="display:block;margin-top:3px"><span class="pill ${w.cls}">${w.txt}</span>${done?' <span class="pill good">Sudah diingatkan</span>':''}</span></span>
+  ${link?`<a class="btn ${done?'ghost':'wa'}" href="${esc(link)}" target="_blank" rel="noopener" data-act="kb-remind" data-id="${esc(k.id)}">${done?'Kirim lagi':'Ingatkan'}</a>`:`<button class="btn ghost" data-act="kbdetail" data-id="${esc(k.id)}">Isi no. WA</button>`}</div>`}
 const shopQris=()=>state.qris.find(x=>x.id==='main'&&x.img)||null;
 const suppliers=()=>(state.cfg?state.cfg.accounts.filter(a=>a.kind==='supplier'):[]);
 const CATS=[['pulsa','Pulsa & data'],['token','Token listrik'],['sembako','Sembako'],['minuman','Makanan & minuman'],['lain','Lainnya']];
@@ -520,7 +548,7 @@ function navBar(route){
   const a=(r,ic,t)=>`<a href="#${r}" ${route===r?'aria-current="page"':''}>${ic}<span>${t}</span></a>`;
   return `<nav class="nav" aria-label="Menu utama"><div class="wrap">${a('beranda',I.home,'Beranda')}${a('laporan',I.report,'Laporan')}
   <a href="#catat" class="fab" ${route==='catat'?'aria-current="page"':''}><span class="k">${I.plus}</span><span>Catat</span></a>
-  ${a('kasbon',I.book,'Kasbon')}${a('lainnya',I.more,'Lainnya')}</div></nav>`;
+  ${(()=>{const n=state.cfg?kbDue().filter(x=>x.k.due<=dayKey(Date.now())).length:0;return a('kasbon',I.book,'Kasbon').replace('<span>Kasbon</span>',(n?`<span class="badge" aria-label="${n} kasbon jatuh tempo">${n}</span>`:'')+'<span>Kasbon</span>')})()}${a('lainnya',I.more,'Lainnya')}</div></nav>`;
 }
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
@@ -559,7 +587,8 @@ function screenHome(){
   const vol=agentToday.reduce((s,t)=>s+t.amount,0);
   const pAgen=agentToday.reduce((s,t)=>s+(t.profit||0),0),sales=tToday.filter(t=>t.kind==='jual'),pToko=sales.reduce((s,t)=>s+(t.profit||0),0);
   const hasToko=state.product.length>0||sales.length>0;
-  const low=lowStock();
+  const low=lowStock(),lowB=lowBalances(bal),lowIds=new Set(lowB.map(x=>x.a.id)),due=kbDue();
+  const minTxt=a=>lowIds.has(a.id)?` · <span class="lowbal">di bawah batas ${rp(a.min)}</span>`:'';
   const bk=banks(),sup=suppliers();
   const totalAset=Object.values(bal).reduce((a,b)=>a+b,0);
   const kas=bal.kas||0;
@@ -569,6 +598,8 @@ function screenHome(){
   <div class="big num">${rp(profit)}</div>
   <div class="row"><span><b class="num">${agentToday.length}</b> transaksi agen</span><span>Volume <b class="num">${rp(vol)}</b></span></div>
   ${hasToko?`<div class="row"><span>Laba agen <b class="num">${rp(pAgen)}</b></span><span>Laba toko <b class="num">${rp(pToko)}</b> · ${sales.length} penjualan</span></div>`:''}</section>
+  ${lowB.length?`<button class="card alert bad" data-act="sheet" data-s="mutasi"><span class="pill bad">Saldo menipis</span><span class="txt">${lowB.map(x=>`${esc(x.a.name)} ${rp(x.bal)} <span class="muted">(batas ${rp(x.a.min)})</span>`).join(' · ')}</span><span class="muted">›</span></button>`:''}
+  ${due.length?`<button class="card alert warn" data-act="nav" data-r="kasbon"><span class="pill warn">Tagih kasbon</span><span class="txt">${due.length} pelanggan · ${rp(due.reduce((a,x)=>a+x.sisa,0))} jatuh tempo</span><span class="muted">›</span></button>`:''}
   ${low.length?`<button class="card" style="padding:12px 14px;display:flex;gap:10px;align-items:center;text-align:left;border-color:var(--warn);background:var(--warn-soft)" data-act="sheet" data-s="products"><span class="pill warn">Stok menipis</span><span class="small" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(low.slice(0,4).map(p=>p.name).join(', '))}${low.length>4?' +'+(low.length-4):''}</span><span class="muted">›</span></button>`:''}
   <div class="quick">
     <button class="qk" data-act="go-catat" data-type="tarik"><span class="tile">${I.out}</span>Tarik</button>
@@ -578,10 +609,10 @@ function screenHome(){
   </div>
   <h2 class="sec">Saldo <button class="more" data-act="sheet" data-s="mutasi">Mutasi saldo</button></h2>
   <div class="card">
-    <div class="bal-kas"><div><div class="lbl">Kas tunai di laci</div><div class="amt num ${kas<0?'neg':''}">${rp(kas)}</div></div>
+    <div class="bal-kas"><div><div class="lbl">Kas tunai di laci${lowIds.has('kas')?' · <span class="lowbal">di bawah batas</span>':''}</div><div class="amt num ${kas<0?'neg':lowIds.has('kas')?'lowbal':''}">${rp(kas)}</div></div>
     <button class="btn ghost" style="padding:9px 12px;font-size:13px" data-act="sheet" data-s="closing">Tutup kasir</button></div>
-    <div class="rows">${bk.map(a=>`<div class="r"><span class="ic in">${esc(a.name.slice(0,3).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">Saldo rekening / EDC</span></span><span class="v num ${(bal[a.id]||0)<0?'neg':''}">${rp(bal[a.id]||0)}</span></div>`).join('')}
-    ${sup.map(a=>`<div class="r"><span class="ic neu">${esc(a.name.slice(0,3).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">Deposit supplier pulsa & token</span></span><span class="v num ${(bal[a.id]||0)<0?'neg':''}">${rp(bal[a.id]||0)}</span></div>`).join('')}
+    <div class="rows">${bk.map(a=>`<div class="r"><span class="ic in">${esc(a.name.slice(0,3).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">Saldo rekening / EDC${minTxt(a)}</span></span><span class="v num ${(bal[a.id]||0)<0?'neg':lowIds.has(a.id)?'lowbal':''}">${rp(bal[a.id]||0)}</span></div>`).join('')}
+    ${sup.map(a=>`<div class="r"><span class="ic neu">${esc(a.name.slice(0,3).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">Deposit supplier pulsa & token${minTxt(a)}</span></span><span class="v num ${(bal[a.id]||0)<0?'neg':lowIds.has(a.id)?'lowbal':''}">${rp(bal[a.id]||0)}</span></div>`).join('')}
     <div class="r" style="background:var(--surface-2);border-radius:0 0 var(--r) var(--r)"><span class="main"><span class="t" style="display:block">Total uang usaha</span></span><span class="v num">${rp(totalAset)}</span></div></div>
   </div>
   <h2 class="sec">Laba 7 hari terakhir</h2>
@@ -770,6 +801,15 @@ document.addEventListener('change',async e=>{
   const id=+ui.billProofId;
   try{const url=await compressImage(f,1400,850000);await api('pay_proof',{id,proof:url});toast('Bukti bayar terkirim');await loadBilling()}catch(er){toast(er.message||'Gagal mengirim bukti bayar')}
 });
+function sheetMinBal(){
+  const bal=balances(),D=ui.minDraft||{};
+  const kindTxt={cash:'Uang tunai di laci',bank:'Rekening / EDC',supplier:'Deposit supplier'};
+  return sheetWrap('Peringatan saldo',`<div class="stack">
+  <p class="muted" style="margin:0">Atur saldo minimum tiap rekening. Kasjo memberi peringatan di Beranda dan setelah transaksi, saat saldo turun di bawah batas ini, supaya kamu sempat isi ulang sebelum pelanggan antre.</p>
+  ${state.cfg.accounts.map(a=>`<div class="field"><label for="mb-${esc(a.id)}">${esc(a.name)} <span class="muted small" style="font-weight:500">· ${kindTxt[a.kind]||''} · sekarang ${rp(bal[a.id]||0)}</span></label><div class="money"><span>Rp</span><input id="mb-${esc(a.id)}" class="inp" inputmode="numeric" data-minbal="${esc(a.id)}" value="${D[a.id]?fmt(D[a.id]):''}" placeholder="0 = tanpa peringatan"></div></div>`).join('')}
+  <button class="btn pri block" data-act="minbal-save">Simpan batas</button>
+  <p class="hint" style="margin:0">Contoh: kas tunai Rp 2.000.000 supaya tarik tunai besar tetap bisa dilayani, BRI Rp 1.000.000, deposit supplier Rp 200.000.</p></div>`);
+}
 function sheetQrisSet(){
   const d=ui.qrisDraft,bk=banks(),has=!!shopQris(),conf=ui.confirm==='del-qris';
   return sheetWrap('QRIS toko',`<div class="stack">
@@ -899,6 +939,7 @@ function screenKasbon(){
   <div class="stat"><span class="lbl">Pelanggan</span><span class="v num">${open.length}</span></div>
   <div class="stat"><span class="lbl">Lewat tempo</span><span class="v num ${late?'neg':''}">${late}</span></div></div>
   <button class="btn pri block" data-act="sheet" data-s="kbnew" ${state.canWrite?'':'disabled'}>+ Catat kasbon baru</button>
+  ${(()=>{const d=kbDue();return d.length?`<h2 class="sec">Perlu ditagih <span class="muted small" style="font-family:var(--f-body);font-weight:500">lewat tempo, hari ini & besok</span></h2><div class="card">${d.map(remindRow).join('')}</div>`:''})()}
   <h2 class="sec">Belum lunas</h2>
   <div class="card rows">${open.length?open.map(row).join(''):'<div class="empty"><b>Tidak ada kasbon berjalan</b>Pelanggan yang berutang akan muncul di sini, lengkap dengan sisa tagihan.</div>'}</div>
   ${done.length?`<h2 class="sec">Sudah lunas</h2><div class="card rows">${done.map(row).join('')}</div>`:''}
@@ -981,6 +1022,7 @@ function screenLainnya(){
   <h2 class="sec">Pengaturan</h2>
   <div class="card rows">${can('settings')?item('qrisSet','QRIS toko',shopQris()?'Sudah diunggah · uang masuk ke '+esc(acctName(shopQris().acct)||'-'):'Unggah gambar QRIS, tampil saat pelanggan bayar QRIS'):''}
   ${can('settings')?item('products','Produk & stok',state.product.length?fmt(state.product.length)+' produk'+(lowStock().length?' · '+lowStock().length+' stok menipis':''):'Daftar barang, pulsa dan token yang dijual'):''}
+  ${can('settings')?item('minbal','Peringatan saldo',(()=>{const n=state.cfg.accounts.filter(a=>a.min>0).length,l=lowBalances().length;return n?n+' rekening diberi batas'+(l?' · '+l+' di bawah batas':''):'Ingatkan saat kas, bank atau deposit menipis'})()):''}
   ${can('settings')?item('fees','Atur fee admin','Tabel fee per jenis transaksi dan nominal'):''}
   ${item('printer','Printer struk',(()=>{const P=prnCfg();return P.mode==='rawbt'?'Lewat aplikasi RawBT':(PRN.char?'Tersambung: '+esc(PRN.dev.name||'Printer'):P.name?'Bluetooth: '+esc(P.name):'Sambungkan printer Bluetooth thermal')})())}
   ${item('poster','Cetak tabel fee','Poster biaya admin untuk dipasang di toko (PNG / PDF A4)')}
@@ -1225,7 +1267,9 @@ function sheetKbNew(){
   <div class="field"><label for="k-name">Nama pelanggan</label><input id="k-name" class="inp" data-text="kb.name" value="${esc(k.name)}" placeholder="Contoh: Bu Sari (warung sebelah)"></div>
   <div class="field"><label for="k-phone">No. WhatsApp</label><input id="k-phone" class="inp" inputmode="tel" data-text="kb.phone" value="${esc(k.phone)}" placeholder="08…"></div>
   <div class="field"><label for="k-amount">Jumlah hutang</label><div class="money xl"><span>Rp</span><input id="k-amount" class="inp" inputmode="numeric" data-money="kb.amount" value="${k.amount?fmt(k.amount):''}" placeholder="0"></div></div>
-  <div class="field"><label for="k-due">Jatuh tempo</label><input id="k-due" class="inp" type="date" data-text="kb.due" value="${esc(k.due)}"></div>
+  <div class="field"><label for="k-due">Jatuh tempo</label><input id="k-due" class="inp" type="date" data-text="kb.due" value="${esc(k.due)}">
+  <div class="chips">${[[3,'3 hari'],[7,'1 minggu'],[14,'2 minggu'],[30,'1 bulan']].map(([d,l])=>`<button class="chip" data-act="kb-due" data-v="${d}" aria-pressed="${k.due===dayKey(Date.now()+d*DAY)}">${l}</button>`).join('')}</div>
+  <span class="hint">Kasjo mengingatkan sehari sebelum dan pada hari jatuh tempo.</span></div>
   <div class="field"><label for="k-note">Catatan</label><input id="k-note" class="inp" data-text="kb.note" value="${esc(k.note)}" placeholder="Misal: tarik tunai belum bayar admin"></div>
   <div class="field"><span class="lbl">Uangnya keluar dari kas tunai?</span><div class="seg"><button data-act="kb-cash" data-v="1" aria-pressed="${k.takeCash}">Ya, kurangi kas</button><button data-act="kb-cash" data-v="0" aria-pressed="${!k.takeCash}">Tidak</button></div>
   <span class="hint">Pilih "Ya" bila pelanggan membawa uang tunai atau belum membayar transaksi yang sudah dicatat.</span></div>
@@ -1236,8 +1280,7 @@ function sheetKbDetail(id){
   if(!k)return sheetWrap('Kasbon','<div class="empty">Data tidak ditemukan.</div>');
   const s=kasbonStats(k),p=ui.pay;
   const ph=(k.phone||'').replace(/\D/g,'');
-  const remind=`Halo ${k.name}, ini pengingat kasbon di ${state.cfg.name}. Sisa tagihan ${rp(s.sisa)}${k.due?', jatuh tempo '+fDate(new Date(k.due+'T00:00')):''}. Terima kasih.`;
-  const wa=ph.length>=9?'https://wa.me/'+(ph.startsWith('0')?'62'+ph.slice(1):ph)+'?text='+encodeURIComponent(remind):'';
+  const wa=kbWaLink(k,s),E=ui.kbEdit||{phone:k.phone||'',due:k.due||''};
   return sheetWrap(k.name,`<div class="stack">
   <div class="stats"><div class="stat main"><span class="lbl">Sisa tagihan</span><span class="v num">${rp(s.sisa)}</span><span class="small muted">Total ${rp(s.total)} · dibayar ${rp(s.paid)}${k.due?' · tempo '+fDate(new Date(k.due+'T00:00')):''}</span></div></div>
   ${k.phone?`<div class="small muted">WhatsApp: <span style="user-select:all">${esc(k.phone)}</span></div>`:''}
@@ -1246,7 +1289,13 @@ function sheetKbDetail(id){
     <button class="linkbtn" data-act="pay-full" data-v="${s.sisa}">Lunasi ${rp(s.sisa)}</button></div>
     <div class="field"><span class="lbl">Diterima di</span><div class="chips">${state.cfg.accounts.map(a=>`<button class="chip acc" data-act="pay-acct" data-v="${esc(a.id)}" aria-pressed="${p.acct===a.id}">${esc(a.name)}</button>`).join('')}</div></div>
     <button class="btn pri block" data-act="pay-save" data-id="${esc(k.id)}">Simpan pembayaran</button></div>`:''}
-  ${wa&&s.sisa>0?`<a class="btn ghost block" style="text-decoration:none" href="${esc(wa)}" target="_blank" rel="noopener">Kirim pengingat via WhatsApp</a>`:''}
+  ${wa&&s.sisa>0?`<a class="btn wa block" style="text-decoration:none" href="${esc(wa)}" target="_blank" rel="noopener" data-act="kb-remind" data-id="${esc(k.id)}">Kirim pengingat via WhatsApp${reminded()[k.id]===dayKey(Date.now())?' (sudah hari ini)':''}</a>`:''}
+  ${s.sisa>0&&!wa?`<p class="hint" style="margin:0">Isi nomor WhatsApp pelanggan supaya bisa dikirimi pengingat.</p>`:''}
+  ${can('delete')?`<details class="more" ${!k.phone||!k.due?'open':''}><summary>Ubah no. WhatsApp & jatuh tempo</summary><div class="stack" style="gap:10px">
+    <input id="ke-phone" class="inp" inputmode="tel" data-text="kbEdit.phone" value="${esc(E.phone)}" placeholder="No. WhatsApp, 08…">
+    <input id="ke-due" class="inp" type="date" data-text="kbEdit.due" value="${esc(E.due)}">
+    <div class="chips">${[[3,'+3 hari'],[7,'+1 minggu'],[14,'+2 minggu']].map(([d,l])=>`<button class="chip" data-act="kbe-due" data-v="${d}">${l}</button>`).join('')}</div>
+    <button class="btn ghost block" data-act="kbe-save" data-id="${esc(k.id)}">Simpan</button></div></details>`:''}
   ${state.canWrite?`<details class="more"><summary>+ Tambah hutang</summary><div class="stack" style="gap:10px"><div class="money"><span>Rp</span><input id="a-amount" class="inp" inputmode="numeric" data-money="addMore" value="${ui.addMore?fmt(ui.addMore):''}" placeholder="0"></div><button class="btn ghost block" data-act="kb-more" data-id="${esc(k.id)}">Tambah ke kasbon (kurangi kas)</button></div></details>`:''}
   <h2 class="sec">Riwayat</h2><div class="card rows">${s.rows.map(trxRow).join('')||'<div class="empty">Belum ada riwayat.</div>'}</div></div>`);
 }
@@ -1378,6 +1427,7 @@ function renderSheet(){
     case'qrisSet':h=sheetQrisSet();break;
     case'qrisShow':h=sheetQrisShow();break;
     case'billing':h=sheetBilling();break;
+    case'minbal':h=sheetMinBal();break;
     case'users':h=sheetUsers();break;
     case'audit':h=sheetAudit();break;
   }
@@ -1442,6 +1492,7 @@ document.addEventListener('input',e=>{
       $('#r-list').innerHTML=list.length?list.slice(0,300).map(trxRow).join(''):'<div class="empty"><b>Tidak ada transaksi</b>Coba kata kunci lain.</div>'}
     return;
   }
+  if(el.dataset.minbal){const v=digits(el.value);ui.minDraft[el.dataset.minbal]=v;el.value=v?fmt(v):'';try{el.setSelectionRange(el.value.length,el.value.length)}catch(_){}return}
   if(el.dataset.prn){const P=prnCfg();P[el.dataset.prn]=el.value;savePrnCfg(P);return}
   if(el.dataset.count){
     const d=+el.dataset.count;const v=digits(el.value);ui.close.counts[d]=v;el.value=v||'';
@@ -1493,6 +1544,7 @@ const handlers={
     if(s==='audit'){ui.audit=null;loadAudit()}
     if(s==='data')ui.wipePin='';
     if(s==='billing'){ui.bill=null;loadBilling()}
+    if(s==='minbal'){ui.minDraft={};for(const a of state.cfg.accounts)ui.minDraft[a.id]=a.min||0}
     openSheet(s)},
   'go-catat':(el)=>{setType(el.dataset.type);location.hash='catat'},
   ftype:(el,v)=>{setType(v);renderMain()},
@@ -1501,11 +1553,11 @@ const handlers={
   feeauto:()=>{ui.form.feeAuto=true;ui.form.fee=feeFor(ui.form.type,ui.form.amount);renderMain()},
   feeto:(el,v)=>{ui.form.feeTo=v;renderMain()},
   'save-trx':()=>guard(async()=>{
-    const f=ui.form;if(!f.amount)return toast('Isi nominal dulu');
+    const f=ui.form;if(!f.amount)return toast('Isi nominal dulu');const before=balances();
     const t={ts:Date.now(),kind:f.type,acct:f.acct,amount:f.amount,fee:f.fee||0,feeTo:f.feeTo,cost:f.cost||0,d:agentEffect(f),profit:(f.fee||0)-(f.cost||0),cust:f.cust.trim(),note:f.note.trim()};
     const saved=await putTrx(t);ui.lastTrx=saved;
     Object.assign(ui.form,{amount:0,fee:feeFor(f.type,0),feeAuto:true,cost:0,cust:'',note:''});
-    renderMain();openSheet('receipt',{id:saved.id,isNew:true});
+    renderMain();openSheet('receipt',{id:saved.id,isNew:true});warnIfCrossed(before);
     const P=prnCfg();if(P.auto&&(P.mode==='rawbt'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
   }),
   trx:(el)=>openSheet('receipt',{id:el.dataset.id}),
@@ -1534,10 +1586,10 @@ const handlers={
     else if(m.kind==='biaya'){d[m.acct]=-m.amount;profit=-m.amount}
     else{if(!m.to||m.to===m.acct)return toast('Pilih rekening tujuan yang berbeda');d[m.acct]=-m.amount;d[m.to]=m.amount}
     const t={ts:Date.now(),kind:m.kind,acct:m.kind==='pindah'?null:m.acct,from:m.kind==='pindah'?m.acct:null,to:m.kind==='pindah'?m.to:null,amount:m.amount,d,profit,note:m.note.trim(),cust:''};
-    await putTrx(t);closeSheet();toast(OTHER[m.kind]+' tersimpan');
+    const before=balances();await putTrx(t);closeSheet();toast(OTHER[m.kind]+' tersimpan');warnIfCrossed(before);
   }),
   /* kasbon */
-  kbdetail:(el)=>{ui.pay={amount:0,acct:'kas'};ui.addMore=0;openSheet('kbdetail',{id:el.dataset.id})},
+  kbdetail:(el)=>{ui.pay={amount:0,acct:'kas'};ui.addMore=0;{const k=state.kasbon.find(x=>x.id===el.dataset.id);ui.kbEdit={phone:(k&&k.phone)||'',due:(k&&k.due)||''}}openSheet('kbdetail',{id:el.dataset.id})},
   'kb-cash':(el,v)=>{ui.kb.takeCash=v==='1';renderSheet()},
   'kb-save':()=>guard(async()=>{
     const k=ui.kb;if(!k.name.trim())return toast('Isi nama pelanggan');if(!k.amount)return toast('Isi jumlah hutang');
@@ -1616,7 +1668,7 @@ const handlers={
   'pm-add':()=>{const m=ui.pos.manual;if(!m.name.trim())return toast('Isi nama item');if(!m.price)return toast('Isi harga jual');ui.pos.cart.push({pid:null,name:m.name.trim(),qty:1,price:m.price,cost:m.cost||0,sup:m.sup||null});ui.pos.manual=null;renderMain()},
   'pos-save':()=>guard(async()=>{
     const P=ui.pos;if(!P.cart.length)return toast('Keranjang masih kosong');
-    const T=cartTotals();const d={};
+    const T=cartTotals();const d={};const before=balances();
     for(const i of P.cart)if(i.sup)d[i.sup]=(d[i.sup]||0)-i.qty*(i.cost||0);
     let acct=null,ref=null,cust=P.cust.trim();
     if(P.pay==='kas'){if(P.given&&P.given<T.total)return toast('Uang diterima kurang dari total');acct='kas';d.kas=(d.kas||0)+T.total}
@@ -1629,7 +1681,7 @@ const handlers={
     const t={ts:Date.now(),kind:'jual',items,amount:T.total,itemCost:T.cost,profit:T.profit,pay:P.pay,acct,given:P.pay==='kas'?(P.given||T.total):0,ref,cust,d,note:''};
     const saved=await putTrx(t);ui.lastTrx=saved;
     Object.assign(ui.pos,{cart:[],given:0,cust:'',kbId:'',kbName:'',q:''});
-    renderMain();openSheet('receipt',{id:saved.id,isNew:true});
+    renderMain();openSheet('receipt',{id:saved.id,isNew:true});warnIfCrossed(before);
     const Pc=prnCfg();if(Pc.auto&&(Pc.mode==='rawbt'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
   }),
   'prod-new':()=>{ui.prod={id:null,name:'',cat:'pulsa',digital:true,price:0,cost:0,sup:(suppliers()[0]||{}).id||'',min:'3',barcode:''};ui.newSup='';openSheet('product')},
@@ -1670,6 +1722,12 @@ const handlers={
   'bill-cancel':(el)=>guard(async()=>{await api('pay_cancel',{id:+el.dataset.id});await loadBilling()}),
   'bill-proof':(el)=>{ui.billProofId=el.dataset.id;const f=$('#proof-file');if(f)f.click()},
   'bill-copy':(el,v)=>copyText(String(v),null,'Nominal disalin'),
+  'minbal-save':()=>guard(async()=>{const cfg=clone(state.cfg);for(const a of cfg.accounts){const v=ui.minDraft[a.id]||0;if(v)a.min=v;else delete a.min}await saveCfg(cfg);closeSheet();const l=lowBalances();toast(l.length?'Disimpan. '+l.length+' rekening sudah di bawah batas':'Batas saldo disimpan')}),
+  'kb-remind':(el)=>{markReminded(el.dataset.id);setTimeout(()=>{renderMain();if(ui.sheet)renderSheet()},400)},
+  'kb-due':(el,v)=>{ui.kb.due=dayKey(Date.now()+(+v)*DAY);renderSheet()},
+  'kbe-due':(el,v)=>{const base=ui.kbEdit.due&&ui.kbEdit.due>=dayKey(Date.now())?new Date(ui.kbEdit.due+'T12:00').getTime():Date.now();ui.kbEdit.due=dayKey(base+(+v)*DAY);renderSheet()},
+  'kbe-save':(el)=>guard(async()=>{const k=state.kasbon.find(x=>x.id===el.dataset.id);if(!k)return;const E=ui.kbEdit;const ph=E.phone.trim();if(ph&&!waNumber(ph))return toast('Nomor WhatsApp tidak valid');
+    const d=clone(k);delete d.id;d.phone=ph;d.due=E.due||'';await putDoc('kasbon',k.id,d);toast('Data kasbon diperbarui');renderSheet()}),
   'sync-now':()=>{sync.err='';updateSyncChip();flushSoon(0)},
   'auth-mode':(el,v)=>{ui.auth.mode=v;ui.auth.err='';renderMain()},
   logout:()=>guard(async()=>{

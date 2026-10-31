@@ -96,6 +96,11 @@ Catat → **Penjualan toko** (switch at the top; the choice is remembered per ph
 - **Expired** toko is view-only: login, reports, kasbon and CSV still work; `push` answers 402 `expired`. Anything recorded on a phone at that moment stays in its queue and is sent automatically after renewal. Banners warn 5 days before the end.
 - New tables (`payments`, `app_settings`) are created automatically on the first request after deploy (`migrate()` with a `.kasjo-schema` marker next to the config file).
 
+## Alerts
+
+- **Saldo minimum** (Lainnya → Peringatan saldo, owner/manager): a minimum per account (`min` on each account in `toko.settings`, shared by every phone). Beranda shows a red *Saldo menipis* card and highlights the account; a toast warns right after a transaction, sale or mutasi that pushes an account under its minimum.
+- **Pengingat kasbon**: kasbon due tomorrow, today or overdue appear in *Perlu ditagih* on the Kasbon screen (overdue first) and as a card on Beranda; the Kasbon menu shows a badge with the number due today or overdue. *Ingatkan* opens WhatsApp to the customer with the amount and due date filled in, and marks it *Sudah diingatkan* for the day (per phone). Owner/manager can add a phone number or change the due date on an existing kasbon; new kasbon have quick due-date chips (3 hari, 1 minggu, 2 minggu, 1 bulan).
+
 ## Receipt printing
 
 Lainnya → Printer struk (settings are saved per phone):

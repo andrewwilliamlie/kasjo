@@ -2,7 +2,7 @@
 // Kasjo: shared backend code. Not reachable from the web (blocked in api/.htaccess).
 declare(strict_types=1);
 
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.5.0';
 const SCHEMA_VERSION = '2'; // bump when tables are added; migrate() creates them on the next request
 const SESSION_DAYS = 90;
 const TRIAL_DAYS = 30;
