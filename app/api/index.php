@@ -163,11 +163,12 @@ case 'push': {
             $d = $del ? [] : ($r['data'] ?? null);
             if (!$del && !is_array($d)) continue;
             $data = $del ? '{}' : json_encode($d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            if ($data === false || strlen($data) > 65536) continue;
+            // a QRIS picture is stored as a compressed image, up to about 900 KB; other records are small
+            if ($data === false || strlen($data) > ($kind === 'qris' ? 900000 : 65536)) { $rejected[] = ['kind' => $kind, 'id' => $id, 'reason' => 'size']; continue; }
             $sel->execute([$tid, $kind, $id]); $cur = $sel->fetch();
             $exists = $cur !== false && !(int)$cur['deleted'];
-            // the product list (prices, costs) is managed by owner and manager only
-            if ($role === 'kasir' && $kind === 'product') { $rejected[] = ['kind' => $kind, 'id' => $id, 'reason' => 'role']; continue; }
+            // the product list (prices, costs) and the shop QRIS are managed by owner and manager only
+            if ($role === 'kasir' && ($kind === 'product' || $kind === 'qris')) { $rejected[] = ['kind' => $kind, 'id' => $id, 'reason' => 'role']; continue; }
             // kasir may only add new entries; changing or deleting needs owner or manager
             if ($role === 'kasir' && ($exists || $del)) { $rejected[] = ['kind' => $kind, 'id' => $id, 'reason' => 'role']; continue; }
             if ($cur !== false && $ua < (int)$cur['updated_at']) continue; // an older edit than the one stored

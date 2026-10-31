@@ -85,6 +85,7 @@ Catat → **Penjualan toko** (switch at the top; the choice is remembered per ph
 - **Stock** is derived, never stored: barang masuk (`stok`, can be paid from an account or recorded as opening stock) minus sales plus adjustments (`stokadj`). Two phones selling at once can't overwrite each other's counts.
 - **Barcode**: phone camera (Chrome on Android, BarcodeDetector) or any USB / Bluetooth scanner, which types the code and presses Enter in the search box.
 - Agent profit and shop profit are shown separately on Beranda and in Laporan (with best sellers). CSV export has an Item column.
+- **QRIS toko** (Lainnya → QRIS toko, owner and manager only): upload the shop's static QRIS picture (compressed in the phone to under ~800 KB, stored as `records` kind `qris`, id `main`) and pick the bank account it pays into. Choosing *QRIS / Transfer* at checkout opens the QRIS full screen with the total to pay and selects that account. Static QRIS carries no amount: the customer types it.
 
 ## Receipt printing
 

@@ -2,10 +2,10 @@
 // Kasjo: shared backend code. Not reachable from the web (blocked in api/.htaccess).
 declare(strict_types=1);
 
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.3.0';
 const SESSION_DAYS = 90;
 const TRIAL_DAYS = 30;
-const KINDS = ['trx', 'kasbon', 'closing', 'product'];
+const KINDS = ['trx', 'kasbon', 'closing', 'product', 'qris'];
 const ROLES = ['owner', 'manager', 'kasir'];
 date_default_timezone_set('Asia/Jakarta');
 
@@ -181,6 +181,7 @@ function record_summary(string $kind, array $d): string {
         if (!empty($d['cust'])) $s .= ' · ' . mb_substr((string)$d['cust'], 0, 60);
         return $s;
     }
+    if ($kind === 'qris') return 'Gambar QRIS toko diperbarui';
     if ($kind === 'product') return 'Produk ' . mb_substr((string)($d['name'] ?? ''), 0, 60) . ' · harga ' . rupiah($d['price'] ?? 0);
     if ($kind === 'kasbon') return 'Pelanggan kasbon ' . mb_substr((string)($d['name'] ?? ''), 0, 60);
     if ($kind === 'closing') return 'Tutup kasir, selisih ' . rupiah($d['diff'] ?? 0);
