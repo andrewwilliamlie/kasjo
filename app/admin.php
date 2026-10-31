@@ -81,6 +81,12 @@ if (empty($_SESSION['admin'])) {
                 if ($nd) db()->prepare('DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE toko_id = ?)')->execute([$id]);
                 $msg = $nd ? 'Toko ' . $t['name'] . ' dinonaktifkan.' : 'Toko ' . $t['name'] . ' diaktifkan lagi.';
             }
+        } elseif ($do === 'delete_toko') {
+            $t = load_toko_row($id);
+            if (!$t) $err = 'Toko tidak ditemukan.';
+            elseif (mb_strtolower(trim((string)($_POST['confirm'] ?? ''))) !== mb_strtolower(trim($t['name']))) $err = 'Ketik nama toko persis untuk menghapus.';
+            else { $pdo = db(); $pdo->beginTransaction(); delete_toko_data($pdo, $id); $pdo->commit(); $msg = 'Toko ' . $t['name'] . ' dan semua datanya dihapus permanen (permintaan hapus akun).'; }
+            $tab = 'toko';
         } elseif ($do === 'settings') {
             set_app_setting('pay_bank', mb_substr(trim((string)($_POST['pay_bank'] ?? '')), 0, 500) ?: null);
             $wa = norm_phone((string)($_POST['pay_wa'] ?? ''));
@@ -217,7 +223,8 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
   <div class="scroll" style="margin-top:12px"><table><thead><tr><th>Toko</th><th>Pengguna</th><th>Transaksi</th><th>Langganan</th></tr></thead><tbody>
   <?php foreach ($tokos as $t): $usersOf->execute([$t['id']]); $us = $usersOf->fetchAll(); $trxOf->execute([$t['id']]); ?>
     <tr><td><b><?= h($t['name']) ?></b><br><small>Daftar <?= h($fmtD($t['created_at'])) ?></small><br><?= $t['disabled'] ? '<span class="pill off">Toko nonaktif</span>' : '' ?>
-        <form class="inline" method="post"><?= $hidden($t['id'], 'toko') ?><button type="submit" class="<?= $t['disabled'] ? 'sec' : 'danger' ?>" style="margin-top:6px"><?= $t['disabled'] ? 'Aktifkan toko' : 'Nonaktifkan toko' ?></button></form></td>
+        <form class="inline" method="post"><?= $hidden($t['id'], 'toko') ?><button type="submit" class="<?= $t['disabled'] ? 'sec' : 'danger' ?>" style="margin-top:6px"><?= $t['disabled'] ? 'Aktifkan toko' : 'Nonaktifkan toko' ?></button></form>
+        <?php if ($t['name'] !== '(akun dihapus)'): ?><details style="margin-top:6px"><summary>Hapus permanen</summary><form method="post" class="acts"><?= $hidden($t['id'], 'delete_toko') ?><input name="confirm" placeholder="Ketik: <?= h($t['name']) ?>" aria-label="Ketik nama toko untuk konfirmasi"><button type="submit" class="danger">Hapus toko &amp; data</button></form><small style="color:var(--muted)">Untuk permintaan hapus akun lewat WhatsApp. Pastikan chat datang dari nomor pemilik yang terdaftar.</small></details><?php endif; ?></td>
       <td><?php foreach ($us as $u): ?><div class="u"><span><b><?= h($u['name']) ?></b> · <?= h($u['role']) ?><br><small><?= h($u['phone']) ?> · masuk <?= h($fmt($u['last_login'])) ?></small></span>
         <?php if ($u['disabled']): ?><span class="pill off">Nonaktif</span><?php endif; ?>
         <form class="inline" method="post"><?= $hidden($u['id'], 'reset') ?><button type="submit">Reset PIN</button></form>

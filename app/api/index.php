@@ -271,6 +271,24 @@ case 'audit': {
     out(['ok' => true, 'items' => array_map(fn($r) => ['action' => $r['action'], 'summary' => $r['summary'], 'at' => (int)$r['at'], 'user' => $r['name'] ?? '-'], $st->fetchAll())]);
 }
 
+case 'delete_account': {
+    // Google Play requirement: users can delete their account from inside the app.
+    // Owner: the whole toko and everything in it. Manager / kasir: only their own login.
+    need_post($method);
+    $me = auth(); $tid = (int)$me['toko_id']; $uid = (int)$me['id'];
+    if (!password_verify((string)($body['pin'] ?? ''), $me['pin_hash'])) fail('current', 'PIN salah.', 401);
+    $pdo = db(); $pdo->beginTransaction();
+    if ($me['role'] === 'owner') {
+        delete_toko_data($pdo, $tid);
+    } else {
+        $pdo->prepare('DELETE FROM sessions WHERE user_id = ?')->execute([$uid]);
+        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
+        audit($tid, null, 'pengguna', null, null, $me['name'] . ' menghapus akunnya sendiri');
+    }
+    $pdo->commit();
+    out(['ok' => true, 'scope' => $me['role'] === 'owner' ? 'toko' : 'user']);
+}
+
 case 'wipe': {
     need_post($method);
     $me = auth(); need_role($me, ['owner']);

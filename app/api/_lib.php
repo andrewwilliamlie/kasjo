@@ -2,7 +2,7 @@
 // Kasjo: shared backend code. Not reachable from the web (blocked in api/.htaccess).
 declare(strict_types=1);
 
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 const SCHEMA_VERSION = '2'; // bump when tables are added; migrate() creates them on the next request
 const SESSION_DAYS = 90;
 const TRIAL_DAYS = 30;
@@ -200,6 +200,14 @@ function approve_payment(int $id, string $note = ''): ?array {
     $pdo->commit();
     audit((int)$p['toko_id'], null, 'langganan', null, null, 'Pembayaran ' . (PLANS[$p['plan']]['label'] ?? $p['plan']) . ' ' . rupiah($p['amount']) . ' dikonfirmasi, aktif s/d ' . date('d M Y', intdiv($newUntil, 1000)));
     return ['until' => $newUntil];
+}
+// Account deletion (Google Play policy): removes a toko and everything in it. Subscription payments stay for
+// Hausjo's bookkeeping and tax, without the proof picture or any link to a person. Call inside a transaction.
+function delete_toko_data(PDO $pdo, int $tid): void {
+    foreach (['DELETE FROM records WHERE toko_id = ?', 'DELETE FROM audit_log WHERE toko_id = ?',
+              'DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE toko_id = ?)', 'DELETE FROM users WHERE toko_id = ?'] as $q) $pdo->prepare($q)->execute([$tid]);
+    $pdo->prepare('UPDATE payments SET proof = NULL, user_id = NULL WHERE toko_id = ?')->execute([$tid]);
+    $pdo->prepare("UPDATE toko SET name = '(akun dihapus)', settings = NULL, settings_updated = 0, disabled = 1 WHERE id = ?")->execute([$tid]);
 }
 function load_toko_row(int $id): array { $st = db()->prepare('SELECT * FROM toko WHERE id = ?'); $st->execute([$id]); return $st->fetch() ?: []; }
 

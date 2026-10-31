@@ -159,7 +159,7 @@ details.more[open] summary{margin-bottom:10px}
 /* stats */
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.stat .v{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .v{font-family:var(--f-display);font-weight:700;font-size:clamp(16px,4.6vw,20px);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat.main{grid-column:1/-1;background:linear-gradient(135deg,var(--brand),var(--brand-2));border-color:transparent;color:var(--brand-ink)}
 .stat.main .v{font-size:30px;color:var(--brand-ink)}
 .stat.main .lbl,.stat.main .muted{color:color-mix(in srgb,var(--brand-ink) 82%,transparent)}
@@ -272,7 +272,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.5.0';
+const APP_VERSION='1.6.0';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -321,6 +321,10 @@ function feeFor(type,A){
   return 0;
 }
 const banks=()=>(state.cfg?state.cfg.accounts.filter(a=>a.kind==='bank'):[]);
+// Opened from the Google Play app (Trusted Web Activity): the Play launch URL carries ?src=twa and Chrome sets an
+// android-app:// referrer. Kept per session only, because the Play app shares storage with Chrome on the same phone.
+// Google Play's Payments policy: no subscription purchase or pointer to one inside the Play app, status only.
+const IN_PLAY=(()=>{let f=false;try{f=new URLSearchParams(location.search).get('src')==='twa'||String(document.referrer).startsWith('android-app://')||sessionStorage.getItem('kasjo-twa')==='1';if(f)sessionStorage.setItem('kasjo-twa','1')}catch(e){}return f})();
 const MAX_USERS=3;
 const tokoInfo=()=>(state.me&&state.me.toko)||{};
 const isExpired=()=>tokoInfo().active===false;
@@ -329,17 +333,19 @@ const WRITE_ACTS=new Set(['save-trx','pos-save','mut-save','kb-save','pay-save',
 function subBanner(){
   const t=tokoInfo();if(t.active==null)return'';
   const owner=state.role==='owner';
-  const btn=owner?'<button class="btn pri" data-act="sheet" data-s="billing">Perpanjang</button>':'';
-  if(!t.active)return `<div class="subbar bad"><div class="wrap subbar" style="width:100%;padding-block:0"><span>Masa langganan habis. Data hanya bisa dilihat${owner?'':', hubungi pemilik toko'}.</span>${btn}</div></div>`;
+  const btn=!owner?'':IN_PLAY?'<button class="btn ghost" data-act="sheet" data-s="billing">Lihat</button>':'<button class="btn pri" data-act="sheet" data-s="billing">Perpanjang</button>';
+  if(!t.active)return `<div class="subbar bad"><div class="wrap subbar" style="width:100%;padding-block:0"><span>Masa langganan habis. Data hanya bisa dilihat${owner||IN_PLAY?'':', hubungi pemilik toko'}.</span>${btn}</div></div>`;
   if(t.daysLeft<=5)return `<div class="subbar warn"><div class="wrap subbar" style="width:100%;padding-block:0"><span>${t.status==='trial'?'Uji coba gratis':'Langganan'} berakhir ${t.daysLeft<=1?'hari ini':t.daysLeft+' hari lagi'}.</span>${btn}</div></div>`;
   return'';
 }
 function subLabel(){const t=tokoInfo();if(t.active==null)return'';if(!t.active)return'Habis sejak '+fDate(t.until)+' · hanya lihat data';return (t.status==='trial'?'Uji coba gratis':'Aktif')+' s/d '+fDate(t.until)+' · '+t.daysLeft+' hari lagi'}
 // ---- saldo minimum ----
+// "saldo BRI", but "Saldo PPOB" stays as named (no "saldo Saldo PPOB")
+const saldoOf=n=>/^(saldo|deposit)\b/i.test(n)?n:'saldo '+n;
 function lowBalances(bal){bal=bal||balances();return(state.cfg?state.cfg.accounts:[]).filter(a=>a.min>0&&(bal[a.id]||0)<a.min).map(a=>({a,bal:bal[a.id]||0}))}
 function warnIfCrossed(before){
   const after=balances(),crossed=(state.cfg?state.cfg.accounts:[]).filter(a=>a.min>0&&(before[a.id]||0)>=a.min&&(after[a.id]||0)<a.min);
-  if(crossed.length)setTimeout(()=>toast('Perhatian: saldo '+crossed.map(a=>a.name+' '+rp(after[a.id]||0)).join(', ')+' di bawah batas minimum'),1200);
+  if(crossed.length)setTimeout(()=>toast('Perhatian: '+crossed.map(a=>saldoOf(a.name)+' '+rp(after[a.id]||0)).join(', ')+' di bawah batas minimum'),1200);
 }
 // ---- pengingat kasbon ----
 const DAY=86400000;
@@ -641,7 +647,7 @@ function chart7(){
 
 function modeSwitch(){return `<div class="seg"><button data-act="cat-mode" data-v="agen" aria-pressed="${ui.catMode!=='toko'}">Transaksi agen</button><button data-act="cat-mode" data-v="toko" aria-pressed="${ui.catMode==='toko'}">Penjualan toko</button></div>`}
 function screenCatat(){
-  if(isExpired())return `<div class="stack"><h2 class="sec" style="font-size:22px;font-weight:700">Catat</h2><div class="card empty"><b>Masa langganan habis</b>Transaksi baru tidak bisa dicatat dulu. Semua data, laporan dan kasbon tetap bisa dilihat dan diunduh.${state.role==='owner'?'<div style="margin-top:12px"><button class="btn pri" data-act="sheet" data-s="billing">Perpanjang langganan</button></div>':'<br>Minta pemilik toko memperpanjang langganan.'}</div></div>`;
+  if(isExpired())return `<div class="stack"><h2 class="sec" style="font-size:22px;font-weight:700">Catat</h2><div class="card empty"><b>Masa langganan habis</b>Transaksi baru tidak bisa dicatat dulu. Semua data, laporan dan kasbon tetap bisa dilihat dan diunduh.${IN_PLAY?'':state.role==='owner'?'<div style="margin-top:12px"><button class="btn pri" data-act="sheet" data-s="billing">Perpanjang langganan</button></div>':'<br>Minta pemilik toko memperpanjang langganan.'}</div></div>`;
   if(ui.catMode==='toko')return screenToko();
   const f=ui.form,bk=banks();
   if(!bk.length)return `<div class="stack">${modeSwitch()}<div class="card empty"><b>Belum ada rekening / EDC</b>Tambahkan rekening bank dulu supaya transaksi bisa dicatat.<div style="margin-top:12px"><button class="btn pri" data-act="sheet" data-s="accounts">Tambah rekening</button></div></div></div>`;
@@ -726,7 +732,7 @@ function cartBlock(T){
     <span class="qty"><button data-act="pos-qty" data-v="${ix}" data-d="-1" aria-label="Kurangi">−</button><b>${i.qty}</b><button data-act="pos-qty" data-v="${ix}" data-d="1" aria-label="Tambah">+</button></span></div>`).join('')}</div>
     <div class="total-row"><span class="muted">Total · ${T.n} item</span><span class="big">${rp(T.total)}</span></div></div>
   ${stockWarn.length?`<div class="auth-err" style="background:var(--warn-soft);color:var(--warn)">Stok tercatat kurang untuk: ${esc(stockWarn.map(i=>i.name).join(', '))}. Penjualan tetap bisa disimpan.</div>`:''}
-  ${supWarn.length?`<div class="auth-err" style="background:var(--warn-soft);color:var(--warn)">Saldo ${esc(supWarn.map(acctName).join(', '))} kurang untuk modal produk digital ini.</div>`:''}
+  ${supWarn.length?`<div class="auth-err" style="background:var(--warn-soft);color:var(--warn)">${esc(supWarn.map(id=>saldoOf(acctName(id))).join(', ')).replace(/^s/,'S')} kurang untuk modal produk digital ini.</div>`:''}
   <div class="field"><span class="lbl">Pembayaran</span><div class="seg"><button data-act="pos-pay" data-v="kas" aria-pressed="${P.pay==='kas'}">Tunai</button><button data-act="pos-pay" data-v="bank" aria-pressed="${P.pay==='bank'}">QRIS / Transfer</button><button data-act="pos-pay" data-v="kasbon" aria-pressed="${P.pay==='kasbon'}">Kasbon</button></div></div>
   ${P.pay==='kas'?`<div class="field"><label for="pos-given">Uang diterima</label><div class="money"><span>Rp</span><input id="pos-given" class="inp" inputmode="numeric" data-money="pos.given" value="${P.given?fmt(P.given):''}" placeholder="0"></div>
     <div class="chips">${quick.map((v,ix)=>`<button class="chip" data-act="pos-given" data-v="${v}">${ix===0?'Uang pas':rp(v)}</button>`).join('')}</div>
@@ -756,7 +762,7 @@ function sheetBilling(){
   const B=ui.bill,owner=state.role==='owner';
   if(!B)return sheetWrap('Langganan Kasjo','<div class="empty">Memuat…</div>');
   if(B.err)return sheetWrap('Langganan Kasjo',`<div class="stack"><div class="empty">${esc(B.err)}</div><button class="btn ghost block" data-act="bill-reload">Coba lagi</button></div>`);
-  const D=B.data,t=D.toko,o=D.open;
+  const D=B.data,t=D.toko,o=IN_PLAY?null:D.open;
   const head=t.active?`<div class="stat main"><span class="lbl">${t.status==='trial'?'Uji coba gratis':'Langganan aktif'}</span><span class="v num">${t.daysLeft} hari lagi</span><span class="small">sampai ${fDate(t.until)}</span></div>`
     :`<div class="stat main" style="background:var(--bad-soft)"><span class="lbl" style="color:var(--bad)">Masa langganan habis</span><span class="v" style="color:var(--bad);font-size:22px">Hanya bisa lihat data</span><span class="small" style="color:var(--bad)">sejak ${fDate(t.until)}</span></div>`;
   const monthly=(D.plans.find(p=>p.id==='1m')||{}).price||0;
@@ -782,10 +788,11 @@ function sheetBilling(){
   }
   return sheetWrap('Langganan Kasjo',`<div class="stack">
   <div class="stats">${head}</div>
-  ${pay||(owner?`<h2 class="sec">Pilih paket</h2><div class="plans">${plans}</div>`:`<p class="muted" style="margin:0">Hanya pemilik toko yang bisa membayar langganan.</p>`)}
-  <p class="hint" style="margin:0">Semua paket: semua fitur Kasjo, 1 toko, hingga ${D.maxUsers} pengguna (pemilik + 2 kasir/manajer). Masa aktif baru ditambahkan setelah masa sekarang berakhir, jadi bayar lebih awal tidak rugi.</p>
-  ${hist.length?`<h2 class="sec">Riwayat pembayaran</h2><div class="card rows">${hist.map(p=>{const st=BILL_ST[p.status]||['neu',p.status];return `<div class="r"><span class="main"><span class="t" style="display:block">${esc(p.label||p.plan)} · ${rp(p.amount)}</span><span class="s" style="display:block">${fDate(p.decidedAt||p.createdAt)}${p.note?' · '+esc(p.note):''}</span></span><span class="pill ${st[0]}">${st[1]}</span></div>`}).join('')}</div>`:''}
-  ${D.supportWa?`<p class="hint" style="margin:0;text-align:center">Pertanyaan? WhatsApp support Kasjo: <b style="user-select:all">+${esc(D.supportWa)}</b></p>`:''}
+  ${IN_PLAY?`<p class="muted" style="margin:0">Status langganan toko ${esc(t.name)}. Satu langganan berlaku untuk 1 toko dengan hingga ${D.maxUsers} pengguna.${t.active?'':' Selama masa langganan habis, data tetap aman dan bisa dilihat.'}</p>`
+  :`${pay||(owner?`<h2 class="sec">Pilih paket</h2><div class="plans">${plans}</div>`:`<p class="muted" style="margin:0">Hanya pemilik toko yang bisa membayar langganan.</p>`)}
+  <p class="hint" style="margin:0">Semua paket: semua fitur Kasjo, 1 toko, hingga ${D.maxUsers} pengguna (pemilik + 2 kasir/manajer). Masa aktif baru ditambahkan setelah masa sekarang berakhir, jadi bayar lebih awal tidak rugi.</p>`}
+  ${hist.length&&!IN_PLAY?`<h2 class="sec">Riwayat pembayaran</h2><div class="card rows">${hist.map(p=>{const st=BILL_ST[p.status]||['neu',p.status];return `<div class="r"><span class="main"><span class="t" style="display:block">${esc(p.label||p.plan)} · ${rp(p.amount)}</span><span class="s" style="display:block">${fDate(p.decidedAt||p.createdAt)}${p.note?' · '+esc(p.note):''}</span></span><span class="pill ${st[0]}">${st[1]}</span></div>`}).join('')}</div>`:''}
+  ${D.supportWa&&!IN_PLAY?`<p class="hint" style="margin:0;text-align:center">Pertanyaan? WhatsApp support Kasjo: <b style="user-select:all">+${esc(D.supportWa)}</b></p>`:''}
   </div>`);
 }
 function compressImage(file,max,limit){return new Promise((res,rej)=>{
@@ -1033,10 +1040,11 @@ function screenLainnya(){
   <div class="card rows"><div class="r"><span class="ic in">${esc((state.me.user.name||'?').slice(0,2).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(state.me.user.name)}</span><span class="s" style="display:block">${ROLE_LABEL[state.role]||state.role} · ${esc(state.me.user.phone)}</span></span></div>
   ${item('billing','Langganan Kasjo',esc(subLabel()))}
   ${item('pin','Ganti PIN','PIN 6 angka untuk masuk')}
+  ${item('delacct','Hapus akun',state.role==='owner'?'Hapus toko beserta semua datanya':'Hapus akun kamu dari toko ini')}
   ${can('users')?item('users','Pengguna & kasir','Tambah kasir, atur peran, reset PIN'):''}
   ${can('audit')?item('audit','Riwayat aktivitas','Siapa mencatat, mengubah atau menghapus apa'):''}
   <button class="r" data-act="logout"><span class="main"><span class="t neg" style="display:block">Keluar</span><span class="s" style="display:block">Keluar dari akun di HP ini</span></span></button></div>
-  <p class="hint">Kasjo (Kasir Agen Hausjo) untuk agen BRILink, Mandiri Agen, BNI Agen46, BCA, BSI dan Mini ATM. Data tersimpan di server Kasjo, dan tetap bisa dicatat saat offline. Versi ${APP_VERSION}.</p>
+  <p class="hint">Kasjo (Kasir Agen Hausjo) untuk agen BRILink, Mandiri Agen, BNI Agen46, BCA, BSI dan Mini ATM. Data tersimpan di server Kasjo, dan tetap bisa dicatat saat offline. Versi ${APP_VERSION} · <a href="https://kasjo.site/privasi.html" target="_blank" rel="noopener" style="color:var(--brand)">Kebijakan privasi</a></p>
   </div>`;
 }
 
@@ -1060,7 +1068,7 @@ function screenAuth(){
     ${reg?'<span class="hint">PIN dipakai untuk masuk. Jangan pakai PIN ATM atau PIN yang mudah ditebak seperti 123456.</span>':
       `<span class="hint">Lupa PIN? Kasir: minta pemilik toko mereset PIN. Pemilik: hubungi support Kasjo${wa?` di WhatsApp <b style="user-select:all">+${esc(wa)}</b>`:''}.</span>`}
   </form>
-  <p class="hint" style="text-align:center;margin:0">Kasjo oleh PT Hausjo Digital Pro</p>
+  <p class="hint" style="text-align:center;margin:0">Kasjo oleh PT Hausjo Digital Pro · <a href="https://kasjo.site/privasi.html" target="_blank" rel="noopener" style="color:var(--brand)">Kebijakan privasi</a></p>
   </div>`;
 }
 function screenMustChange(){
@@ -1361,6 +1369,16 @@ function sheetData(){
     <div class="btnrow"><button class="btn ghost" data-act="confirm-no">Batal</button><button class="btn danger" data-act="wipe">Ya, hapus semua</button></div></div>`
   :`<button class="btn danger block" data-act="confirm" data-v="wipe">Hapus semua data</button>`):''}</div>`);
 }
+function sheetDelAcct(){
+  const owner=state.role==='owner',D=ui.delAcct;
+  return sheetWrap('Hapus akun',`<div class="stack">
+  <div class="confirm" style="font-weight:500">${owner?`<b>Toko "${esc(state.me.toko.name)}" dan semua datanya akan dihapus permanen:</b> transaksi, penjualan, produk, kasbon, tutup kasir, QRIS toko, pengaturan, dan akun semua kasir/manajer toko ini.`:`<b>Akun kamu (${esc(state.me.user.name)}) akan dihapus dari toko ini.</b> Data toko tetap ada dan dikelola pemilik.`}</div>
+  ${owner?`<p class="hint" style="margin:0">Sebelum menghapus, unduh laporan CSV dari menu Laporan kalau ingin menyimpan salinan. Catatan pembayaran langganan disimpan Hausjo untuk keperluan pembukuan, tanpa bukti bayar dan data pribadi.</p>`:''}
+  <div class="field"><label for="da-pin">Masukkan PIN untuk konfirmasi</label><input id="da-pin" class="inp" type="password" inputmode="numeric" maxlength="6" autocomplete="off" data-text="delAcct.pin" value="${esc(D.pin)}"></div>
+  <div class="field"><label for="da-word">Ketik <b>HAPUS</b></label><input id="da-word" class="inp" autocomplete="off" data-text="delAcct.word" value="${esc(D.word)}" placeholder="HAPUS"></div>
+  ${D.err?`<div class="auth-err">${esc(D.err)}</div>`:''}
+  <button class="btn danger block" data-act="delacct-go">Hapus akun permanen</button></div>`);
+}
 function sheetPin(){
   const p=ui.pin;
   return sheetWrap('Ganti PIN',`<div class="stack">
@@ -1428,6 +1446,7 @@ function renderSheet(){
     case'qrisShow':h=sheetQrisShow();break;
     case'billing':h=sheetBilling();break;
     case'minbal':h=sheetMinBal();break;
+    case'delacct':h=sheetDelAcct();break;
     case'users':h=sheetUsers();break;
     case'audit':h=sheetAudit();break;
   }
@@ -1526,7 +1545,7 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
   const act=el.dataset.act,v=el.dataset.v;
   if(act==='close-bg'){if(e.target===el)closeSheet();return}
-  if(isExpired()&&WRITE_ACTS.has(act)){e.preventDefault();toast('Masa langganan habis. '+(state.role==='owner'?'Perpanjang di Lainnya → Langganan.':'Minta pemilik toko memperpanjang.'));if(state.role==='owner'&&!(ui.sheet&&ui.sheet.type==='billing'))openSheet('billing');return}
+  if(isExpired()&&WRITE_ACTS.has(act)){e.preventDefault();toast(IN_PLAY?'Masa langganan habis. Data hanya bisa dilihat.':'Masa langganan habis. '+(state.role==='owner'?'Perpanjang di Lainnya → Langganan.':'Minta pemilik toko memperpanjang.'));if(!IN_PLAY&&state.role==='owner'&&!(ui.sheet&&ui.sheet.type==='billing'))openSheet('billing');return}
   const H=handlers[act];if(H){e.preventDefault&&el.tagName!=='A'&&e.preventDefault();H(el,v)}
 });
 const handlers={
@@ -1543,6 +1562,7 @@ const handlers={
     if(s==='users'){ui.users={list:null,err:'',add:{name:'',phone:'',role:'kasir'},temp:null};loadUsers()}
     if(s==='audit'){ui.audit=null;loadAudit()}
     if(s==='data')ui.wipePin='';
+    if(s==='delacct')ui.delAcct={pin:'',word:'',err:''};
     if(s==='billing'){ui.bill=null;loadBilling()}
     if(s==='minbal'){ui.minDraft={};for(const a of state.cfg.accounts)ui.minDraft[a.id]=a.min||0}
     openSheet(s)},
@@ -1728,6 +1748,13 @@ const handlers={
   'kbe-due':(el,v)=>{const base=ui.kbEdit.due&&ui.kbEdit.due>=dayKey(Date.now())?new Date(ui.kbEdit.due+'T12:00').getTime():Date.now();ui.kbEdit.due=dayKey(base+(+v)*DAY);renderSheet()},
   'kbe-save':(el)=>guard(async()=>{const k=state.kasbon.find(x=>x.id===el.dataset.id);if(!k)return;const E=ui.kbEdit;const ph=E.phone.trim();if(ph&&!waNumber(ph))return toast('Nomor WhatsApp tidak valid');
     const d=clone(k);delete d.id;d.phone=ph;d.due=E.due||'';await putDoc('kasbon',k.id,d);toast('Data kasbon diperbarui');renderSheet()}),
+  'delacct-go':()=>guard(async()=>{
+    const D=ui.delAcct;D.err='';
+    if(D.word.trim().toUpperCase()!=='HAPUS'){D.err='Ketik HAPUS untuk konfirmasi.';return renderSheet()}
+    let r;try{r=await api('delete_account',{pin:D.pin})}catch(e){D.err=e.message;return renderSheet()}
+    try{localStorage.removeItem(cacheKey())}catch(e){}
+    signedOut(r.scope==='toko'?'Toko dan semua data sudah dihapus':'Akun kamu sudah dihapus');
+  }),
   'sync-now':()=>{sync.err='';updateSyncChip();flushSoon(0)},
   'auth-mode':(el,v)=>{ui.auth.mode=v;ui.auth.err='';renderMain()},
   logout:()=>guard(async()=>{
@@ -1976,6 +2003,8 @@ api('config').then(c=>{state.supportWa=c.supportWa||'';if(state.phase==='auth')r
 (function(){
   try{state.token=localStorage.getItem('kasjo-token');state.me=JSON.parse(localStorage.getItem('kasjo-me')||'null')}catch(e){}
   try{if(localStorage.getItem('kasjo-catmode')==='toko')ui.catMode='toko'}catch(e){}
+  {const m=new URLSearchParams(location.search).get('mode');if(m==='agen'||m==='toko'){ui.catMode=m;try{localStorage.setItem('kasjo-catmode',m)}catch(e){}}}
+  {const m=location.search.match(/[?&]mode=(agen|toko)/);if(m){ui.catMode=m[1];try{localStorage.setItem('kasjo-catmode',m[1])}catch(e){}}}
   if(/[?&]daftar/.test(location.search))ui.auth.mode='register';
   if(!state.token){state.phase='auth';render();return}
   if(state.me){state.role=state.me.user.role;if(loadCache())ready()}

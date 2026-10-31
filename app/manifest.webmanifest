@@ -10,8 +10,99 @@
   "background_color": "#f4f8f7",
   "theme_color": "#0e7c73",
   "icons": [
-    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
-    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "/",
+  "display_override": [
+    "standalone"
+  ],
+  "categories": [
+    "business",
+    "finance",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "screenshots/beranda.jpg",
+      "sizes": "540x960",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Beranda: laba harian, saldo kas dan bank"
+    },
+    {
+      "src": "screenshots/catat.jpg",
+      "sizes": "540x960",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Catat transaksi agen dengan fee otomatis"
+    },
+    {
+      "src": "screenshots/toko.jpg",
+      "sizes": "540x960",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Kasir toko dengan keranjang dan kembalian"
+    },
+    {
+      "src": "screenshots/laporan.jpg",
+      "sizes": "540x960",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Laporan laba agen dan toko"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Catat transaksi agen",
+      "short_name": "Catat",
+      "url": "./?mode=agen#catat",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Penjualan toko",
+      "short_name": "Toko",
+      "url": "./?mode=toko#catat",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Buku kasbon",
+      "short_name": "Kasbon",
+      "url": "./#kasbon",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
