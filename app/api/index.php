@@ -293,7 +293,7 @@ case 'billing': {
     $pay = array_map(fn($r) => ['id' => (int)$r['id'], 'plan' => $r['plan'], 'label' => PLANS[$r['plan']]['label'] ?? ($r['plan'] === 'manual' ? 'Perpanjangan dari support Kasjo (' . (int)$r['days'] . ' hari)' : $r['plan']), 'amount' => (int)$r['amount'], 'code' => (int)$r['code'], 'status' => $r['status'], 'note' => $r['note'], 'createdAt' => (int)$r['created_at'], 'decidedAt' => $r['decided_at'] ? (int)$r['decided_at'] : null, 'hasProof' => (bool)$r['has_proof']], $st->fetchAll());
     $open = null; foreach ($pay as $p) if (in_array($p['status'], ['pending', 'review'], true)) { $open = $p; break; }
     $res = ['ok' => true, 'toko' => toko_out($t), 'plans' => $plans, 'maxUsers' => MAX_USERS, 'payments' => $pay, 'open' => $open, 'supportWa' => config()['support_wa'] ?? ''];
-    if ($open) { $res['payQris'] = app_setting('pay_qris'); $res['payBank'] = app_setting('pay_bank'); }
+    if ($open) { $res['payQris'] = app_setting('pay_qris'); $res['payBank'] = app_setting('pay_bank'); $res['payWa'] = app_setting('pay_wa') ?? DEFAULT_PAY_WA; $res['owner'] = ['name' => $me['name'], 'phone' => $me['phone']]; }
     out($res);
 }
 

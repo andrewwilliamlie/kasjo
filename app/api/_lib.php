@@ -2,13 +2,14 @@
 // Kasjo: shared backend code. Not reachable from the web (blocked in api/.htaccess).
 declare(strict_types=1);
 
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 const SCHEMA_VERSION = '2'; // bump when tables are added; migrate() creates them on the next request
 const SESSION_DAYS = 90;
 const TRIAL_DAYS = 30;
 const KINDS = ['trx', 'kasbon', 'closing', 'product', 'qris'];
 const ROLES = ['owner', 'manager', 'kasir'];
-const MAX_USERS = 3; // active users per toko, owner included
+const MAX_USERS = 3;
+const DEFAULT_PAY_WA = '6285596301230'; // admin WhatsApp for payment confirmations; changeable in admin.php // active users per toko, owner included
 // subscription plans: price in rupiah, days added
 const PLANS = [
     '1m'  => ['label' => '1 bulan', 'days' => 30,  'price' => 29000],

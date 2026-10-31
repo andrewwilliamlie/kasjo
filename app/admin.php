@@ -83,6 +83,9 @@ if (empty($_SESSION['admin'])) {
             }
         } elseif ($do === 'settings') {
             set_app_setting('pay_bank', mb_substr(trim((string)($_POST['pay_bank'] ?? '')), 0, 500) ?: null);
+            $wa = norm_phone((string)($_POST['pay_wa'] ?? ''));
+            if ($wa !== '' && !valid_phone($wa)) $err = 'Nomor WhatsApp konfirmasi tidak valid.';
+            else set_app_setting('pay_wa', $wa ?: null);
             $f = $_FILES['pay_qris'] ?? null;
             if ($f && ($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
                 $info = @getimagesize($f['tmp_name']);
@@ -191,6 +194,7 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
       <?php if ($qr): ?><img src="<?= h($qr) ?>" alt="QRIS pembayaran" style="width:220px;border:1px solid var(--line);border-radius:10px;background:#fff"><br><label><input type="checkbox" name="del_qris" value="1" style="width:auto"> Hapus gambar ini</label><?php endif; ?>
       <p><label for="pay_qris">Unggah gambar QRIS <?= $qr ? 'baru' : '' ?> (JPG/PNG, maks 1,5 MB)</label><br><input id="pay_qris" name="pay_qris" type="file" accept="image/jpeg,image/png,image/webp"></p>
       <p><label for="pay_bank">Info transfer bank (opsional, tampil di bawah QRIS)</label><br><textarea id="pay_bank" name="pay_bank" rows="3" placeholder="BCA 1234567890 a.n. PT Hausjo Digital Pro"><?= h(app_setting('pay_bank') ?? '') ?></textarea></p>
+      <p><label for="pay_wa">WhatsApp admin untuk konfirmasi pembayaran</label><br><input id="pay_wa" name="pay_wa" value="<?= h(app_setting('pay_wa') ?? DEFAULT_PAY_WA) ?>" placeholder="0855xxxxxxxx" inputmode="tel"><br><small style="color:var(--muted)">Tombol "Konfirmasi ke Admin via WhatsApp" di aplikasi mengirim pesan ke nomor ini.</small></p>
       <button type="submit">Simpan</button></form>
     <p style="color:var(--muted);font-size:13px">Harga paket: <?php foreach (PLANS as $p) echo h($p['label'] . ' ' . rupiah($p['price'])) . ' · '; ?>maks <?= MAX_USERS ?> pengguna aktif per toko. Diubah di <code>app/api/_lib.php</code>.</p>
   </section>

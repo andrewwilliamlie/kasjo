@@ -92,7 +92,7 @@ Catat → **Penjualan toko** (switch at the top; the choice is remembered per ph
 - 30-day free trial on sign-up, then **Rp 29.000 / 1 bulan, Rp 79.000 / 3 bulan, Rp 249.000 / 1 tahun** (`PLANS` in `app/api/_lib.php`). Every plan: all features, 1 toko, up to `MAX_USERS` = 3 active users (owner included).
 - **Paying** (owner only, Lainnya → Langganan): choose a plan → the app shows Hausjo's payment QRIS and an amount with a unique code (price + 1–299, e.g. Rp 29.137) → the owner uploads a screenshot of the payment → status *Sedang dicek*.
 - **Confirming** (`admin.php` → Pembayaran): match the exact amount against the bank / QRIS history, then *Konfirmasi lunas* or *Tolak* with a reason the owner sees. Approval adds the plan's days after the current end date, so paying early loses nothing. *+ hari* on the Toko tab extends a toko without payment (promo, compensation).
-- **Payment QRIS and bank info** are set in `admin.php` → QRIS pembayaran (stored in `app_settings`).
+- **Payment QRIS, bank info and the admin WhatsApp** for confirmations (default +62 855-9630-1230) are set in `admin.php` → QRIS pembayaran (stored in `app_settings`). The bill in the app has a *Konfirmasi ke Admin via WhatsApp* button that opens a chat with toko, owner, plan, exact amount and bill number filled in.
 - **Expired** toko is view-only: login, reports, kasbon and CSV still work; `push` answers 402 `expired`. Anything recorded on a phone at that moment stays in its queue and is sent automatically after renewal. Banners warn 5 days before the end.
 - New tables (`payments`, `app_settings`) are created automatically on the first request after deploy (`migrate()` with a `.kasjo-schema` marker next to the config file).
 

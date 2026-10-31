@@ -263,7 +263,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.4.1';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -711,6 +711,14 @@ function addToCart(p){
   const P=ui.pos;const ex=P.cart.find(i=>i.pid===p.id);
   if(ex)ex.qty++;else P.cart.push({pid:p.id,name:p.name,qty:1,price:p.price||0,cost:p.cost||0,sup:p.digital?(p.sup||null):null});
 }
+function waFmt(n){const d=String(n||'').replace(/\D/g,'');return d.startsWith('62')?'+62 '+d.slice(2).replace(/(\d{3})(\d{4})(\d+)/,'$1-$2-$3'):d}
+function payWaLink(D,o){
+  const t=D.toko,u=D.owner||{};
+  const msg=['Halo Admin Kasjo, saya sudah membayar langganan Kasjo.','','Toko: '+t.name,'Nama: '+(u.name||'-')+' ('+(u.phone?'0'+String(u.phone).replace(/^62/,''):'-')+')','Paket: '+o.label,'Nominal: '+rp(o.amount)+' (kode unik '+o.code+')','No. tagihan: #'+o.id,
+    o.status==='review'?'Bukti bayar sudah saya unggah di aplikasi.':'Bukti bayar saya lampirkan di chat ini.','','Mohon diaktifkan / diperpanjang. Terima kasih.'].join('\n');
+  return 'https://wa.me/'+String(D.payWa||'').replace(/\D/g,'')+'?text='+encodeURIComponent(msg);
+}
+const WA_ICON='<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.7.7 2.3.8 3.1.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>';
 const BILL_ST={pending:['neu','Menunggu bayar'],review:['warn','Sedang dicek'],approved:['good','Lunas'],rejected:['bad','Ditolak'],cancelled:['neu','Dibatalkan']};
 async function loadBilling(){try{const r=await api('billing');ui.bill={data:r};if(r.toko&&state.me){state.me.toko=r.toko;saveCache()}}catch(e){ui.bill={err:e.message}}if(ui.sheet&&ui.sheet.type==='billing'){renderSheet();renderMain()}}
 function sheetBilling(){
@@ -736,6 +744,8 @@ function sheetBilling(){
       ${D.payBank&&o.status!=='review'?`<div class="effect"><div class="lbl">Atau transfer ke</div><div style="white-space:pre-wrap;user-select:all">${esc(D.payBank)}</div></div>`:''}
       ${owner?`<input id="proof-file" type="file" accept="image/*" hidden>
       <button class="btn pri block" data-act="bill-proof" data-id="${o.id}">${o.status==='review'?'Ganti bukti bayar':'Sudah bayar · unggah bukti'}</button>
+      ${D.payWa?`<a class="btn block" style="text-decoration:none;background:#1f9d55;color:#fff" href="${esc(payWaLink(D,o))}" target="_blank" rel="noopener">${WA_ICON}Konfirmasi ke Admin via WhatsApp</a>
+      <span class="hint" style="text-align:center;margin-top:-4px">Sudah bayar? Kirim konfirmasi ke admin Kasjo di <b style="user-select:all">${esc(waFmt(D.payWa))}</b> supaya langganan segera diaktifkan.</span>`:''}
       ${o.status==='pending'?`<button class="linkbtn" style="align-self:center" data-act="bill-cancel" data-id="${o.id}">Ganti paket</button>`:''}`:''}
     </div>`;
   }
