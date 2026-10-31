@@ -19,6 +19,7 @@ Bookkeeping app for BRILink and Mini ATM agents, by PT Hausjo Digital Pro.
 | `app/api/_lib.php` | Shared code: config, database schema, rate limiting, activity log. Blocked from the web |
 | `app/install.php` | One-time installer. Writes `kasjo-config.php` next to `public_html` and creates the tables, then locks itself |
 | `app/admin.php` | Hausjo support page: find a toko, reset a PIN, disable a user or toko |
+| `tools/backup.php` | Nightly database backup, run by cron (command line only, blocked from the web) |
 
 ## Accounts and roles
 
@@ -55,6 +56,20 @@ The app keeps a copy on the phone (localStorage) and a queue of unsent changes, 
 1. In hPanel set the password of database user `u283956056_kasjo`.
 2. Open `https://app.kasjo.site/install.php`, enter the database password, an admin password (for `admin.php`) and the support WhatsApp number.
 3. Register the first toko at `https://app.kasjo.site/`.
+
+## Backups
+
+- **Nightly copy:** a Hostinger cron job runs `php /home/u283956056/domains/kasjo.site/public_html/tools/backup.php` every night at 02:00 WIB. It writes `kasjo-YYYYMMDD-HHMMSS.sql.gz` to `/home/u283956056/domains/kasjo.site/backups/` (outside `public_html`, never downloadable from the web) and keeps the last 14 days.
+- **Weekly copy:** Hostinger's own account backups (hPanel → Files → Backups) as a second layer.
+- `tools/` is blocked from the web by the root `.htaccess`, and the script refuses to run outside the command line.
+
+### Restoring a backup
+
+1. hPanel → Files → File Manager → `domains/kasjo.site/backups/`. Download the file from the day you want.
+2. hPanel → Databases → phpMyAdmin → select `u283956056_kasjo` → **Import** → choose the `.sql.gz` file → **Go**. The file drops and recreates each Kasjo table, so the database returns exactly to the moment of that backup. Anything recorded after it is lost, unless it is still waiting in a phone's offline queue.
+3. Ask users to reopen the app. Phones re-sync automatically.
+
+To restore only one toko, import into a new empty database first and copy that toko's rows across.
 
 ## Deploying
 
