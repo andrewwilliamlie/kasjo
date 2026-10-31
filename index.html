@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasjo: Aplikasi Pembukuan Agen BRILink &amp; Mini ATM</title>
+<meta name="description" content="Kasjo (Kasir Agen Hausjo) adalah aplikasi pembukuan agen BRILink dan Mini ATM. Catat tarik tunai, transfer dan fee admin otomatis, pantau saldo kas dan bank, kasbon, dan tutup kasir. Coba gratis 30 hari.">
+<meta name="keywords" content="aplikasi pembukuan agen brilink, aplikasi agen brilink, pembukuan brilink, catat transaksi brilink, aplikasi mini atm, aplikasi kasir agen, fee admin brilink, agen bank">
+<link rel="canonical" href="https://kasjo.site/">
+<meta name="theme-color" content="#0e7c73">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kasjo">
+<meta property="og:title" content="Kasjo: Aplikasi Pembukuan Agen BRILink & Mini ATM">
+<meta property="og:description" content="Catat transaksi agen dalam hitungan detik. Fee admin otomatis, saldo kas dan bank langsung kelihatan.">
+<meta property="og:url" content="https://kasjo.site/">
+<meta property="og:image" content="https://kasjo.site/app/icons/icon-512.png">
+<meta property="og:locale" content="id_ID">
+<link rel="icon" type="image/png" href="app/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="app/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@400;500;700&display=swap">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"SoftwareApplication","name":"Kasjo","alternateName":"Kasir Agen Hausjo","applicationCategory":"FinanceApplication","operatingSystem":"Android, iOS, Web","url":"https://kasjo.site/","description":"Aplikasi pembukuan agen BRILink dan Mini ATM: catat transaksi, fee admin otomatis, saldo kas dan bank, kasbon, tutup kasir.","inLanguage":"id","offers":{"@type":"Offer","price":"0","priceCurrency":"IDR","description":"Uji coba gratis 30 hari"},"publisher":{"@type":"Organization","name":"PT Hausjo Digital Pro","url":"https://hausjo.id"}},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Apa itu Kasjo?","acceptedAnswer":{"@type":"Answer","text":"Kasjo (Kasir Agen Hausjo) adalah aplikasi pembukuan untuk agen BRILink, agen bank lain, dan Mini ATM. Kasjo mencatat setiap transaksi, menghitung fee admin otomatis, dan menunjukkan saldo kas tunai, saldo tiap bank, serta laba harian."}},
+  {"@type":"Question","name":"Apakah Kasjo aplikasi resmi BRI?","acceptedAnswer":{"@type":"Answer","text":"Bukan. Kasjo adalah aplikasi pembukuan buatan PT Hausjo Digital Pro, terpisah dari aplikasi transaksi bank. Transaksi tetap dilakukan di mesin EDC atau aplikasi agen, lalu dicatat di Kasjo."}},
+  {"@type":"Question","name":"Bank apa saja yang bisa dicatat?","acceptedAnswer":{"@type":"Answer","text":"Semua rekening dan EDC yang dipakai agen: BRI (BRILink), Mandiri Agen, BNI Agen46, BCA, BSI, BTN, bank daerah, dan Mini ATM. Nama rekening bisa ditambah sendiri."}},
+  {"@type":"Question","name":"Bisa dipakai di HP dan oleh kasir?","acceptedAnswer":{"@type":"Answer","text":"Bisa. Kasjo berjalan di HP Android, iPhone, dan laptop lewat browser, dan bisa dipasang seperti aplikasi. Pemilik bisa menambah kasir dengan nomor WhatsApp dan PIN masing-masing. Kasir hanya bisa mencatat, tidak bisa menghapus."}},
+  {"@type":"Question","name":"Kalau sinyal hilang, transaksi tetap bisa dicatat?","acceptedAnswer":{"@type":"Answer","text":"Bisa. Kasjo menyimpan catatan di HP lebih dulu dan mengirimnya ke server begitu internet tersambung lagi."}},
+  {"@type":"Question","name":"Berapa biayanya?","acceptedAnswer":{"@type":"Answer","text":"Kasjo bisa dicoba gratis selama 30 hari tanpa kartu kredit. Informasi paket berlangganan akan diumumkan di halaman ini."}}
+ ]}
+]}
+</script>
+<style>
+:root{--teal:#0e7c73;--teal-2:#14a093;--deep:#0b5654;--orange:#f6822a;--orange-2:#f9a63a;--bg:#ffffff;--soft:#f1f8f7;--ink:#1d2a29;--muted:#5f706e;--line:#e1e9e8;
+  --f-display:"Poppins","Roboto",system-ui,sans-serif;--f-body:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--teal)}img{max-width:100%}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.01em;text-wrap:balance;margin:0}
+.mark{display:flex;align-items:center;gap:9px;font-family:var(--f-display);font-weight:700;font-size:22px;color:var(--deep);text-decoration:none}
+.mark b{color:var(--orange)}.mark img{width:34px;height:34px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:13px 20px;font-weight:700;text-decoration:none;font-size:15px}
+.btn.pri{background:var(--orange);color:#fff;box-shadow:0 6px 16px rgb(246 130 42 / .3)}
+.btn.ghost{background:#fff;color:var(--deep);border:1px solid var(--line)}
+.btn.light{background:rgb(255 255 255 / .14);color:#fff;border:1px solid rgb(255 255 255 / .35)}
+:focus-visible{outline:3px solid var(--orange-2);outline-offset:2px}
+
+header.nav{position:sticky;top:0;z-index:10;background:rgb(255 255 255 / .94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.nav .wrap{display:flex;align-items:center;gap:16px;padding-block:12px}
+header.nav nav{margin-left:auto;display:flex;align-items:center;gap:18px;font-size:15px}
+header.nav nav a{color:var(--ink);text-decoration:none;font-weight:500}
+header.nav nav a.btn{color:#fff;padding:9px 14px}
+@media (max-width:720px){header.nav nav a:not(.btn){display:none}}
+
+.hero{background:linear-gradient(140deg,var(--deep) 0%,var(--teal) 55%,var(--teal-2) 100%);color:#fff;overflow:hidden;position:relative}
+.hero::after{content:"";position:absolute;right:-120px;bottom:-160px;width:520px;height:420px;border-radius:50%;background:rgb(255 255 255 / .06)}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding-block:64px 72px;position:relative;z-index:1}
+.hero .eyebrow{display:inline-block;background:rgb(255 255 255 / .14);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;letter-spacing:.03em}
+.hero h1{font-size:clamp(32px,5vw,52px);line-height:1.08;margin:16px 0 14px}
+.hero h1 em{font-style:normal;color:var(--orange-2)}
+.hero p.lead{font-size:18px;color:rgb(255 255 255 / .88);max-width:34em;margin:0 0 26px}
+.hero .ctas{display:flex;gap:12px;flex-wrap:wrap}
+.hero .note{font-size:13.5px;color:rgb(255 255 255 / .75);margin-top:14px}
+@media (max-width:860px){.hero .wrap{grid-template-columns:1fr;padding-block:44px 56px}}
+
+/* phone mockup drawn in HTML, values are examples */
+.phone{width:min(320px,100%);margin:0 auto;background:#f4f8f7;border-radius:34px;padding:14px;border:8px solid #0a2e2c;box-shadow:0 30px 60px rgb(0 0 0 / .3);color:var(--ink)}
+.phone .bar{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 12px}
+.phone .bar .mark{font-size:16px}.phone .bar .mark img{width:24px;height:24px}
+.phone .bar small{font-size:11px;font-weight:700;color:var(--teal);background:#e0f4f1;border-radius:99px;padding:2px 8px}
+.phone .card{background:linear-gradient(135deg,var(--teal),var(--teal-2));color:#fff;border-radius:16px;padding:14px}
+.phone .card .l{font-size:11px;text-transform:uppercase;letter-spacing:.06em;opacity:.8}
+.phone .card .v{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1.2}
+.phone .card .r{font-size:12px;opacity:.88}
+.phone .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
+.phone .tiles div{background:#fff;border:1px solid var(--line);border-radius:10px;font-size:10.5px;font-weight:500;text-align:center;padding:8px 2px}
+.phone .tiles i{display:block;width:18px;height:18px;border-radius:6px;background:var(--soft);margin:0 auto 4px;border:2px solid var(--teal)}
+.phone .row{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;margin-top:6px}
+.phone .row b{font-variant-numeric:tabular-nums}.phone .row .p{color:#0e9b8b;font-size:11px;display:block;text-align:right}
+.phone .ex{text-align:center;font-size:10.5px;color:var(--muted);margin-top:8px}
+
+section{padding-block:72px}
+section.soft{background:var(--soft)}
+.sec-head{max-width:640px;margin-bottom:36px}
+.sec-head .k{color:var(--orange);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.sec-head h2{font-size:clamp(26px,3.4vw,36px);line-height:1.15;margin:8px 0 10px}
+.sec-head p{color:var(--muted);margin:0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}}
+.feat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:8px}
+.feat .ic{width:44px;height:44px;border-radius:12px;background:#e0f4f1;color:var(--teal);display:grid;place-items:center}
+.feat .ic svg{width:24px;height:24px}
+.feat h3{font-size:17px;line-height:1.3}
+.feat p{margin:0;color:var(--muted);font-size:15px}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.step{background:#fff;border-radius:16px;padding:22px;border:1px solid var(--line);position:relative}
+.step::before{counter-increment:s;content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);margin-bottom:12px}
+.step h3{font-size:17px;margin-bottom:6px}.step p{margin:0;color:var(--muted);font-size:15px}
+
+.compare{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
+.compare table{width:100%;border-collapse:collapse;min-width:560px;font-size:15px}
+.compare th,.compare td{padding:13px 16px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+.compare thead th{border-top:0;font-family:var(--f-display);font-size:15px;background:var(--soft)}
+.compare thead th:nth-child(2){color:var(--teal)}
+.compare td:first-child{font-weight:600}
+.compare td:nth-child(2){color:var(--deep);font-weight:500}
+.compare td:nth-child(3){color:var(--muted)}
+
+.faq{max-width:760px;display:flex;flex-direction:column;gap:10px}
+.faq details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--orange);font-size:20px;line-height:1}
+.faq details[open] summary::after{content:"−"}
+.faq p{margin:10px 0 0;color:var(--muted)}
+
+.cta{background:linear-gradient(140deg,var(--deep),var(--teal));color:#fff;border-radius:24px;padding:40px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.cta h2{font-size:clamp(24px,3vw,32px)}.cta p{margin:6px 0 0;color:rgb(255 255 255 / .85)}
+footer{border-top:1px solid var(--line);padding-block:28px;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;align-items:center}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap">
+  <a class="mark" href="/" aria-label="Kasjo beranda"><img src="app/icons/icon-192.png" alt="" width="34" height="34"><span>Kas<b>jo</b></span></a>
+  <nav aria-label="Menu"><a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#faq">FAQ</a><a href="https://app.kasjo.site/">Masuk</a><a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis</a></nav>
+</div></header>
+
+<main>
+<section class="hero" style="padding:0">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Untuk agen BRILink, agen bank &amp; Mini ATM</span>
+      <h1>Aplikasi pembukuan agen BRILink, <em>rapi dalam hitungan detik.</em></h1>
+      <p class="lead">Catat tarik tunai, transfer dan setor tunai dengan fee admin otomatis. Saldo kas di laci, saldo tiap bank dan laba harian langsung kelihatan, tanpa hitung manual tiap malam.</p>
+      <div class="ctas"><a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis 30 hari</a><a class="btn light" href="#fitur">Lihat fitur</a></div>
+      <p class="note">Tanpa kartu kredit. Bisa dipakai di HP Android, iPhone dan laptop.</p>
+    </div>
+    <div aria-hidden="true">
+      <div class="phone">
+        <div class="bar"><span class="mark"><img src="app/icons/icon-192.png" alt=""><span>Kas<b>jo</b></span></span><small>Tersimpan</small></div>
+        <div class="card"><div class="l">Laba bersih hari ini</div><div class="v">Rp 187.000</div><div class="r">23 transaksi · volume Rp 14.250.000</div></div>
+        <div class="tiles"><div><i></i>Tarik</div><div><i></i>Transfer</div><div><i></i>Setor</div><div><i></i>Top Up</div></div>
+        <div class="row"><span>Kas tunai di laci</span><b>Rp 8.420.000</b></div>
+        <div class="row"><span>BRI</span><b>Rp 21.300.000</b></div>
+        <div class="row"><span>Tarik Tunai · 14:32</span><span><b>Rp 500.000</b><span class="p">laba Rp 5.000</span></span></div>
+        <div class="ex">Tampilan dengan angka contoh</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="fitur">
+  <div class="wrap">
+    <div class="sec-head"><span class="k">Fitur</span><h2>Semua yang dibutuhkan konter agen, dalam satu aplikasi</h2><p>Dibuat khusus untuk alur kerja agen BRILink dan Mini ATM: uang tunai keluar masuk laci, saldo rekening naik turun, fee admin jadi laba.</p></div>
+    <div class="grid">
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><h3>Catat transaksi &lt; 5 detik</h3><p>Tarik tunai, transfer, setor tunai, top up e-wallet dan bayar tagihan. Tombol nominal cepat Rp 100rb sampai Rp 2jt.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg></span><h3>Fee admin otomatis</h3><p>Atur tabel fee sendiri per jenis transaksi dan nominal. Laba tiap transaksi terhitung langsung.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></span><h3>Saldo kas &amp; semua bank</h3><p>Kas tunai, BRI, Mandiri, BNI, BCA, BSI dan Mini ATM terlihat sekaligus. Peringatan kalau saldo tidak cukup.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 9h6M8 13h4"/></svg></span><h3>Buku kasbon digital</h3><p>Catat pelanggan yang berutang, jatuh tempo dan cicilan. Kirim pengingat lewat WhatsApp.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8h14M5 16h14"/></svg></span><h3>Tutup kasir &amp; cek selisih</h3><p>Hitung uang di laci per pecahan. Kasjo langsung menunjukkan uang lebih atau kurang dari catatan.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><h3>Laporan harian &amp; bulanan</h3><p>Laba bersih, volume dan fee per jenis transaksi. Unduh ke Excel kapan saja.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M17 11l2 2 3-3"/></svg></span><h3>Pemilik &amp; kasir terpisah</h3><p>Tambah kasir dengan nomor WhatsApp dan PIN sendiri. Kasir hanya mencatat, riwayat aktivitas tersimpan.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2"/><rect x="6" y="14" width="12" height="7"/></svg></span><h3>Struk &amp; poster tabel fee</h3><p>Kirim struk ke WhatsApp nasabah. Cetak poster biaya admin A4 untuk dipasang di toko.</p></article>
+      <article class="feat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg></span><h3>Tetap jalan saat offline</h3><p>Sinyal hilang? Transaksi tetap tercatat di HP dan terkirim ke server begitu internet tersambung.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="soft" id="cara">
+  <div class="wrap">
+    <div class="sec-head"><span class="k">Cara kerja</span><h2>Mulai dalam 3 langkah</h2></div>
+    <div class="steps">
+      <div class="step"><h3>Daftar dengan nomor WhatsApp</h3><p>Isi nama usaha dan buat PIN 6 angka. Tidak perlu email atau kartu kredit.</p></div>
+      <div class="step"><h3>Pilih rekening &amp; isi modal</h3><p>Pilih bank atau EDC yang dipakai, lalu isi modal awal kas dan saldo. Tabel fee sudah terisi dan bisa diubah.</p></div>
+      <div class="step"><h3>Catat setiap transaksi</h3><p>Pilih jenis, ketuk nominal, simpan. Saldo dan laba berubah otomatis. Malamnya, tutup kasir sekali ketuk.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="k">Bandingkan</span><h2>Kasjo vs buku tulis</h2><p>Pembukuan agen dengan buku tulis atau Excel gampang salah hitung dan susah dicek ulang.</p></div>
+    <div class="compare"><table>
+      <thead><tr><th scope="col"></th><th scope="col">Kasjo</th><th scope="col">Buku tulis / Excel</th></tr></thead>
+      <tbody>
+        <tr><td>Mencatat transaksi</td><td>Beberapa ketukan, fee terhitung otomatis</td><td>Tulis tangan atau ketik sel, hitung fee sendiri</td></tr>
+        <tr><td>Saldo kas &amp; bank</td><td>Selalu terkini setelah tiap transaksi</td><td>Dihitung ulang tiap malam</td></tr>
+        <tr><td>Selisih kas</td><td>Ketahuan saat tutup kasir, tercatat di laporan</td><td>Sulit dilacak penyebabnya</td></tr>
+        <tr><td>Kasbon pelanggan</td><td>Sisa tagihan, jatuh tempo, pengingat WhatsApp</td><td>Catatan terselip atau lupa ditagih</td></tr>
+        <tr><td>Kasir &amp; pemilik</td><td>Akun terpisah, riwayat siapa mencatat apa</td><td>Satu buku, tidak bisa dipantau dari jauh</td></tr>
+        <tr><td>Kalau HP rusak</td><td>Data aman di server, masuk lagi di HP baru</td><td>Buku basah, sobek atau file hilang</td></tr>
+      </tbody></table></div>
+  </div>
+</section>
+
+<section class="soft" id="faq">
+  <div class="wrap">
+    <div class="sec-head"><span class="k">FAQ</span><h2>Pertanyaan yang sering ditanya</h2></div>
+    <div class="faq">
+      <details><summary>Apa itu Kasjo?</summary><p>Kasjo (Kasir Agen Hausjo) adalah aplikasi pembukuan untuk agen BRILink, agen bank lain, dan Mini ATM. Kasjo mencatat setiap transaksi, menghitung fee admin otomatis, dan menunjukkan saldo kas tunai, saldo tiap bank, serta laba harian.</p></details>
+      <details><summary>Apakah Kasjo aplikasi resmi BRI?</summary><p>Bukan. Kasjo adalah aplikasi pembukuan buatan PT Hausjo Digital Pro, terpisah dari aplikasi transaksi bank. Transaksi tetap dilakukan di mesin EDC atau aplikasi agen, lalu dicatat di Kasjo.</p></details>
+      <details><summary>Bank apa saja yang bisa dicatat?</summary><p>Semua rekening dan EDC yang dipakai agen: BRI (BRILink), Mandiri Agen, BNI Agen46, BCA, BSI, BTN, bank daerah, dan Mini ATM. Nama rekening bisa ditambah sendiri.</p></details>
+      <details><summary>Bisa dipakai di HP dan oleh kasir?</summary><p>Bisa. Kasjo berjalan di HP Android, iPhone, dan laptop lewat browser, dan bisa dipasang seperti aplikasi. Pemilik bisa menambah kasir dengan nomor WhatsApp dan PIN masing-masing. Kasir hanya bisa mencatat, tidak bisa menghapus.</p></details>
+      <details><summary>Kalau sinyal hilang, transaksi tetap bisa dicatat?</summary><p>Bisa. Kasjo menyimpan catatan di HP lebih dulu dan mengirimnya ke server begitu internet tersambung lagi.</p></details>
+      <details><summary>Berapa biayanya?</summary><p>Kasjo bisa dicoba gratis selama 30 hari tanpa kartu kredit. Informasi paket berlangganan akan diumumkan di halaman ini.</p></details>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap"><div class="cta"><div><h2>Rapikan pembukuan agen kamu hari ini</h2><p>Daftar dengan nomor WhatsApp, langsung pakai. Gratis 30 hari.</p></div><a class="btn pri" href="https://app.kasjo.site/?daftar">Daftar gratis</a></div></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <span class="mark" style="font-size:18px"><img src="app/icons/icon-192.png" alt="" width="28" height="28"><span>Kas<b>jo</b></span></span>
+  <span>© 2026 PT Hausjo Digital Pro · <a href="https://hausjo.id">hausjo.id</a></span>
+  <span>Kasjo tidak berafiliasi dengan BRI atau bank lain.</span>
+</div></footer>
+</body>
+</html>

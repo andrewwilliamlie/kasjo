@@ -1,0 +1,25 @@
+# Kasjo: kasjo.site (landing page). The app lives in app/ and is served as app.kasjo.site.
+# Note: this file also applies to app.kasjo.site requests (its folder is inside this one).
+
+RewriteEngine On
+# Always HTTPS, and www.kasjo.site -> kasjo.site
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} ^www\.kasjo\.site$ [NC]
+RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+# kasjo.site/app/... -> app.kasjo.site/...
+RewriteCond %{HTTP_HOST} ^kasjo\.site$ [NC]
+RewriteRule ^app/(.*)$ https://app.kasjo.site/$1 [L,R=301]
+
+DirectoryIndex index.html
+Options -Indexes
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+<FilesMatch "^index\.html$">
+  Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>
+
+# Hide repository internals and notes (the site is deployed from Git)
+RedirectMatch 404 /\.git
+RedirectMatch 404 /(README|CLAUDE)\.md$
+RedirectMatch 404 ^/(tools|docs)(/|$)

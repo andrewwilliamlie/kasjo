@@ -1,0 +1,5 @@
+kasjo-config.php
+*.sqlite*
+.DS_Store
+*.keystore
+*.jks

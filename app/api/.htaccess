@@ -1,0 +1,6 @@
+# Only the API entry point is reachable; shared code files (starting with _) are blocked.
+<FilesMatch "^_">
+  Require all denied
+</FilesMatch>
+Options -Indexes
+DirectoryIndex index.php
