@@ -75,6 +75,17 @@ To restore only one toko, import into a new empty database first and copy that t
 
 Pushes to `main` deploy to kasjo.site through Hostinger Git auto-deployment (the repository root becomes `public_html`).
 
+## Shop POS (Penjualan toko)
+
+Catat → **Penjualan toko** (switch at the top; the choice is remembered per phone).
+
+- **Products** (`records` kind `product`, owner and manager only): name, category, selling price, cost price, barcode, low-stock level. *Barang* products keep stock; *digital* products (pulsa, paket data, token) have no stock and take their cost from a **supplier deposit** account.
+- **Supplier deposit**: an account of kind `supplier` (Lainnya → Rekening & EDC, or from the product form). Top it up with Mutasi saldo → Pindah saldo. Its balance shows on Beranda.
+- **Sale** (`trx` kind `jual`): cart with `items` (`pid`, `name`, `qty`, `price`, `cost`, `sup`), payment `kas` (with cash given and change), `bank` (QRIS / transfer into a chosen account) or `kasbon` (adds to a customer's kasbon, new or existing). Profit = price − cost per item. A kasir can sell and add one-off items not in the list.
+- **Stock** is derived, never stored: barang masuk (`stok`, can be paid from an account or recorded as opening stock) minus sales plus adjustments (`stokadj`). Two phones selling at once can't overwrite each other's counts.
+- **Barcode**: phone camera (Chrome on Android, BarcodeDetector) or any USB / Bluetooth scanner, which types the code and presses Enter in the search box.
+- Agent profit and shop profit are shown separately on Beranda and in Laporan (with best sellers). CSV export has an Item column.
+
 ## Receipt printing
 
 Lainnya → Printer struk (settings are saved per phone):

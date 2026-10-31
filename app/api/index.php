@@ -166,6 +166,8 @@ case 'push': {
             if ($data === false || strlen($data) > 65536) continue;
             $sel->execute([$tid, $kind, $id]); $cur = $sel->fetch();
             $exists = $cur !== false && !(int)$cur['deleted'];
+            // the product list (prices, costs) is managed by owner and manager only
+            if ($role === 'kasir' && $kind === 'product') { $rejected[] = ['kind' => $kind, 'id' => $id, 'reason' => 'role']; continue; }
             // kasir may only add new entries; changing or deleting needs owner or manager
             if ($role === 'kasir' && ($exists || $del)) { $rejected[] = ['kind' => $kind, 'id' => $id, 'reason' => 'role']; continue; }
             if ($cur !== false && $ua < (int)$cur['updated_at']) continue; // an older edit than the one stored

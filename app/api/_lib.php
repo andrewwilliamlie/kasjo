@@ -2,10 +2,10 @@
 // Kasjo: shared backend code. Not reachable from the web (blocked in api/.htaccess).
 declare(strict_types=1);
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const SESSION_DAYS = 90;
 const TRIAL_DAYS = 30;
-const KINDS = ['trx', 'kasbon', 'closing'];
+const KINDS = ['trx', 'kasbon', 'closing', 'product'];
 const ROLES = ['owner', 'manager', 'kasir'];
 date_default_timezone_set('Asia/Jakarta');
 
@@ -170,13 +170,18 @@ function clear_attempts(string $k): void { db()->prepare('DELETE FROM attempts W
 
 /* ---------- activity log ---------- */
 const KIND_LABEL = ['tarik' => 'Tarik Tunai', 'transfer' => 'Transfer', 'setor' => 'Setor Tunai', 'topup' => 'Top Up E-Wallet', 'tagihan' => 'Bayar Tagihan',
-    'modal' => 'Modal Masuk', 'ambil' => 'Ambil Uang', 'pindah' => 'Pindah Saldo', 'biaya' => 'Biaya Operasional', 'kasbon' => 'Kasbon', 'bayarkasbon' => 'Bayar Kasbon', 'selisih' => 'Selisih Kas'];
+    'jual' => 'Penjualan Toko', 'stok' => 'Barang Masuk', 'stokadj' => 'Penyesuaian Stok', 'modal' => 'Modal Masuk', 'ambil' => 'Ambil Uang', 'pindah' => 'Pindah Saldo', 'biaya' => 'Biaya Operasional', 'kasbon' => 'Kasbon', 'bayarkasbon' => 'Bayar Kasbon', 'selisih' => 'Selisih Kas'];
 function record_summary(string $kind, array $d): string {
     if ($kind === 'trx') {
         $s = (KIND_LABEL[$d['kind'] ?? ''] ?? 'Transaksi') . ' ' . rupiah($d['amount'] ?? 0);
+        if (!empty($d['items']) && is_array($d['items'])) {
+            $names = array_map(fn($i) => (int)($i['qty'] ?? 0) . 'x ' . mb_substr((string)($i['name'] ?? ''), 0, 40), array_slice($d['items'], 0, 3));
+            $s .= ' · ' . implode(', ', $names) . (count($d['items']) > 3 ? ' …' : '');
+        }
         if (!empty($d['cust'])) $s .= ' · ' . mb_substr((string)$d['cust'], 0, 60);
         return $s;
     }
+    if ($kind === 'product') return 'Produk ' . mb_substr((string)($d['name'] ?? ''), 0, 60) . ' · harga ' . rupiah($d['price'] ?? 0);
     if ($kind === 'kasbon') return 'Pelanggan kasbon ' . mb_substr((string)($d['name'] ?? ''), 0, 60);
     if ($kind === 'closing') return 'Tutup kasir, selisih ' . rupiah($d['diff'] ?? 0);
     return $kind;
