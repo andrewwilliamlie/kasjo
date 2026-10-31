@@ -241,6 +241,14 @@ tfoot td{font-weight:700}
 .qris-card .ask{font-size:13px;color:#5a6c66;text-align:center}
 .qris-thumb{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:left;width:100%}
 .qris-thumb img{width:64px;height:64px;object-fit:cover;object-position:center 40%;border-radius:8px;background:#fff;border:1px solid var(--line);flex:none}
+.subbar{padding-block:10px;font-size:14px;font-weight:600;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.subbar.warn{background:var(--warn-soft);color:var(--warn)}.subbar.bad{background:var(--bad-soft);color:var(--bad)}
+.subbar .btn{padding:7px 12px;font-size:13px;flex:none}
+.plans{display:grid;grid-template-columns:1fr;gap:10px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+.plan .main{flex:1;min-width:0}.plan .nm{font-weight:700;font-size:16px}.plan .pr{font-family:var(--f-display);font-weight:700;font-size:20px;color:var(--brand);font-variant-numeric:tabular-nums}
+.plan.best{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 25%,transparent)}
+.bill-amt{font-family:var(--f-display);font-weight:700;font-size:32px;font-variant-numeric:tabular-nums;color:var(--ink)}
 .pill.sync{border:0;margin-top:3px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .auth-err{background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600}
 .tempin{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px;font-weight:600}
@@ -255,7 +263,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.4.0';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -304,6 +312,20 @@ function feeFor(type,A){
   return 0;
 }
 const banks=()=>(state.cfg?state.cfg.accounts.filter(a=>a.kind==='bank'):[]);
+const MAX_USERS=3;
+const tokoInfo=()=>(state.me&&state.me.toko)||{};
+const isExpired=()=>tokoInfo().active===false;
+// actions that change data: blocked while the subscription has run out (view-only)
+const WRITE_ACTS=new Set(['save-trx','pos-save','mut-save','kb-save','pay-save','kb-more','close-save','fee-save','acct-add','acct-add-custom','acct-del','biz-save','prod-save','prod-del','si-save','sa-save','qris-save','qris-del','sup-add','del-trx','onb-save','demo','pm-add','pos-add','stock-in','stock-adj','prod-new','ua-save']);
+function subBanner(){
+  const t=tokoInfo();if(t.active==null)return'';
+  const owner=state.role==='owner';
+  const btn=owner?'<button class="btn pri" data-act="sheet" data-s="billing">Perpanjang</button>':'';
+  if(!t.active)return `<div class="subbar bad"><div class="wrap subbar" style="width:100%;padding-block:0"><span>Masa langganan habis. Data hanya bisa dilihat${owner?'':', hubungi pemilik toko'}.</span>${btn}</div></div>`;
+  if(t.daysLeft<=5)return `<div class="subbar warn"><div class="wrap subbar" style="width:100%;padding-block:0"><span>${t.status==='trial'?'Uji coba gratis':'Langganan'} berakhir ${t.daysLeft<=1?'hari ini':t.daysLeft+' hari lagi'}.</span>${btn}</div></div>`;
+  return'';
+}
+function subLabel(){const t=tokoInfo();if(t.active==null)return'';if(!t.active)return'Habis sejak '+fDate(t.until)+' · hanya lihat data';return (t.status==='trial'?'Uji coba gratis':'Aktif')+' s/d '+fDate(t.until)+' · '+t.daysLeft+' hari lagi'}
 const shopQris=()=>state.qris.find(x=>x.id==='main'&&x.img)||null;
 const suppliers=()=>(state.cfg?state.cfg.accounts.filter(a=>a.kind==='supplier'):[]);
 const CATS=[['pulsa','Pulsa & data'],['token','Token listrik'],['sembako','Sembako'],['minuman','Makanan & minuman'],['lain','Lainnya']];
@@ -421,7 +443,10 @@ async function syncNow(){
     if(rejected){sync.cursor=0;toast('Sebagian perubahan ditolak. Hanya pemilik atau manajer yang bisa mengubah atau menghapus data.')}
     await pull();
     sync.err='';
-  }catch(e){sync.err=e.offline?'offline':'error';if(state.phase==='loading'&&state.token){state.slow=true;renderMain()}}
+  }catch(e){
+    if(e.code==='expired'){sync.err='expired';try{await pull()}catch(_){}if(state.me&&state.me.toko&&state.me.toko.active!==false){state.me.toko.active=false;render()}}
+    else sync.err=e.offline?'offline':'error';
+    if(state.phase==='loading'&&state.token&&e.code!=='expired'){state.slow=true;renderMain()}}
   finally{sync.busy=false;updateSyncChip();if(sync.again){sync.again=false;flushSoon(0)}}
 }
 async function pull(){
@@ -436,7 +461,7 @@ async function pull(){
   }
   for(const c of COLS)sortCol(c);
   if(r.settings&&!sync.settings){state.cfg=r.settings.data||null;changed=true}
-  if(r.me){if(JSON.stringify(r.me)!==JSON.stringify(state.me))changed=true;state.me=r.me;state.role=r.me.user.role}
+  if(r.me){if(JSON.stringify(r.me)!==JSON.stringify(state.me))changed=true;state.me=r.me;state.role=r.me.user.role;if(sync.err==='expired'&&r.me.toko.active){sync.err='';if(pendingCount())flushSoon(0)}}
   sync.cursor=r.now;saveCache();
   if(state.phase!=='ready')ready();else if(changed)render();
 }
@@ -456,7 +481,8 @@ function signedIn(j){
 }
 function syncChip(){
   const n=pendingCount();let c='good',t='Tersimpan';
-  if(sync.err==='offline'){c='warn';t=n?'Offline · '+n+' belum terkirim':'Offline'}
+  if(sync.err==='expired'){c='bad';t=n?'Habis · '+n+' belum terkirim':'Langganan habis'}
+  else if(sync.err==='offline'){c='warn';t=n?'Offline · '+n+' belum terkirim':'Offline'}
   else if(n){c='warn';t=n+' belum terkirim'}
   else if(sync.err){c='bad';t='Gagal sinkron'}
   return `<button class="pill ${c} sync" id="sync" data-act="sync-now" title="Sinkronkan sekarang">${t}</button>`;
@@ -584,6 +610,7 @@ function chart7(){
 
 function modeSwitch(){return `<div class="seg"><button data-act="cat-mode" data-v="agen" aria-pressed="${ui.catMode!=='toko'}">Transaksi agen</button><button data-act="cat-mode" data-v="toko" aria-pressed="${ui.catMode==='toko'}">Penjualan toko</button></div>`}
 function screenCatat(){
+  if(isExpired())return `<div class="stack"><h2 class="sec" style="font-size:22px;font-weight:700">Catat</h2><div class="card empty"><b>Masa langganan habis</b>Transaksi baru tidak bisa dicatat dulu. Semua data, laporan dan kasbon tetap bisa dilihat dan diunduh.${state.role==='owner'?'<div style="margin-top:12px"><button class="btn pri" data-act="sheet" data-s="billing">Perpanjang langganan</button></div>':'<br>Minta pemilik toko memperpanjang langganan.'}</div></div>`;
   if(ui.catMode==='toko')return screenToko();
   const f=ui.form,bk=banks();
   if(!bk.length)return `<div class="stack">${modeSwitch()}<div class="card empty"><b>Belum ada rekening / EDC</b>Tambahkan rekening bank dulu supaya transaksi bisa dicatat.<div style="margin-top:12px"><button class="btn pri" data-act="sheet" data-s="accounts">Tambah rekening</button></div></div></div>`;
@@ -684,6 +711,55 @@ function addToCart(p){
   const P=ui.pos;const ex=P.cart.find(i=>i.pid===p.id);
   if(ex)ex.qty++;else P.cart.push({pid:p.id,name:p.name,qty:1,price:p.price||0,cost:p.cost||0,sup:p.digital?(p.sup||null):null});
 }
+const BILL_ST={pending:['neu','Menunggu bayar'],review:['warn','Sedang dicek'],approved:['good','Lunas'],rejected:['bad','Ditolak'],cancelled:['neu','Dibatalkan']};
+async function loadBilling(){try{const r=await api('billing');ui.bill={data:r};if(r.toko&&state.me){state.me.toko=r.toko;saveCache()}}catch(e){ui.bill={err:e.message}}if(ui.sheet&&ui.sheet.type==='billing'){renderSheet();renderMain()}}
+function sheetBilling(){
+  const B=ui.bill,owner=state.role==='owner';
+  if(!B)return sheetWrap('Langganan Kasjo','<div class="empty">Memuat…</div>');
+  if(B.err)return sheetWrap('Langganan Kasjo',`<div class="stack"><div class="empty">${esc(B.err)}</div><button class="btn ghost block" data-act="bill-reload">Coba lagi</button></div>`);
+  const D=B.data,t=D.toko,o=D.open;
+  const head=t.active?`<div class="stat main"><span class="lbl">${t.status==='trial'?'Uji coba gratis':'Langganan aktif'}</span><span class="v num">${t.daysLeft} hari lagi</span><span class="small">sampai ${fDate(t.until)}</span></div>`
+    :`<div class="stat main" style="background:var(--bad-soft)"><span class="lbl" style="color:var(--bad)">Masa langganan habis</span><span class="v" style="color:var(--bad);font-size:22px">Hanya bisa lihat data</span><span class="small" style="color:var(--bad)">sejak ${fDate(t.until)}</span></div>`;
+  const monthly=(D.plans.find(p=>p.id==='1m')||{}).price||0;
+  const plans=D.plans.map(p=>{const full=monthly*Math.round(p.days/30),save=full-p.price,pct=full?Math.round(save/full*100):0;
+    return `<button class="plan ${p.id==='12m'?'best':''}" data-act="bill-plan" data-v="${p.id}" ${owner?'':'disabled'}><span class="main"><span class="nm" style="display:block">${esc(p.label)}</span><span class="small muted" style="display:block">${p.days>30?'≈ '+rp(Math.round(p.price/Math.round(p.days/30)))+' / bulan':'Bayar bulanan'}</span></span>${save>0?`<span class="pill good">Hemat ${pct}%</span>`:''}<span class="pr">${rp(p.price)}</span></button>`}).join('');
+  const hist=D.payments.filter(p=>p.status!=='cancelled'&&(!o||p.id!==o.id));
+  let pay='';
+  if(o){
+    pay=`<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div class="lbl">Tagihan paket ${esc(o.label)}</div>
+      <div class="bill-amt">${rp(o.amount)}</div>
+      <span class="hint" style="margin-top:-6px">Bayar <b>tepat sampai 3 digit terakhir</b> (sudah termasuk kode unik ${o.code}) supaya pembayaranmu cepat dikenali.</span>
+      <button class="btn ghost" data-act="bill-copy" data-v="${o.amount}">Salin nominal</button>
+      ${o.status==='review'?`<div class="verdict warn"><span>Bukti bayar terkirim. Tim Kasjo sedang mengecek, biasanya kurang dari 1×24 jam.</span></div>`
+        :(D.payQris?`<div class="qris-card"><img src="${D.payQris}" alt="QRIS pembayaran langganan Kasjo"><span class="ask">Scan dengan m-banking atau e-wallet, masukkan ${rp(o.amount)}.</span></div>`:'<div class="auth-err">QRIS pembayaran belum tersedia. Hubungi support Kasjo.</div>')}
+      ${D.payBank&&o.status!=='review'?`<div class="effect"><div class="lbl">Atau transfer ke</div><div style="white-space:pre-wrap;user-select:all">${esc(D.payBank)}</div></div>`:''}
+      ${owner?`<input id="proof-file" type="file" accept="image/*" hidden>
+      <button class="btn pri block" data-act="bill-proof" data-id="${o.id}">${o.status==='review'?'Ganti bukti bayar':'Sudah bayar · unggah bukti'}</button>
+      ${o.status==='pending'?`<button class="linkbtn" style="align-self:center" data-act="bill-cancel" data-id="${o.id}">Ganti paket</button>`:''}`:''}
+    </div>`;
+  }
+  return sheetWrap('Langganan Kasjo',`<div class="stack">
+  <div class="stats">${head}</div>
+  ${pay||(owner?`<h2 class="sec">Pilih paket</h2><div class="plans">${plans}</div>`:`<p class="muted" style="margin:0">Hanya pemilik toko yang bisa membayar langganan.</p>`)}
+  <p class="hint" style="margin:0">Semua paket: semua fitur Kasjo, 1 toko, hingga ${D.maxUsers} pengguna (pemilik + 2 kasir/manajer). Masa aktif baru ditambahkan setelah masa sekarang berakhir, jadi bayar lebih awal tidak rugi.</p>
+  ${hist.length?`<h2 class="sec">Riwayat pembayaran</h2><div class="card rows">${hist.map(p=>{const st=BILL_ST[p.status]||['neu',p.status];return `<div class="r"><span class="main"><span class="t" style="display:block">${esc(p.label||p.plan)} · ${rp(p.amount)}</span><span class="s" style="display:block">${fDate(p.decidedAt||p.createdAt)}${p.note?' · '+esc(p.note):''}</span></span><span class="pill ${st[0]}">${st[1]}</span></div>`}).join('')}</div>`:''}
+  ${D.supportWa?`<p class="hint" style="margin:0;text-align:center">Pertanyaan? WhatsApp support Kasjo: <b style="user-select:all">+${esc(D.supportWa)}</b></p>`:''}
+  </div>`);
+}
+function compressImage(file,max,limit){return new Promise((res,rej)=>{
+  if(!file||!/^image\//.test(file.type))return rej(new Error('Pilih file gambar (JPG atau PNG).'));
+  const fr=new FileReader();fr.onerror=()=>rej(new Error('Gambar tidak bisa dibaca.'));
+  fr.onload=()=>{const img=new Image();img.onerror=()=>rej(new Error('Gambar tidak bisa dibaca. Coba file lain.'));img.onload=()=>{
+    const sc=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    let q=.85,url=c.toDataURL('image/jpeg',q);while(url.length>limit&&q>.4){q-=.1;url=c.toDataURL('image/jpeg',q)}
+    url.length>limit?rej(new Error('Gambar terlalu besar.')):res(url)};img.src=fr.result};fr.readAsDataURL(file)})}
+document.addEventListener('change',async e=>{
+  if(!e.target||e.target.id!=='proof-file')return;const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+  const id=+ui.billProofId;
+  try{const url=await compressImage(f,1400,850000);await api('pay_proof',{id,proof:url});toast('Bukti bayar terkirim');await loadBilling()}catch(er){toast(er.message||'Gagal mengirim bukti bayar')}
+});
 function sheetQrisSet(){
   const d=ui.qrisDraft,bk=banks(),has=!!shopQris(),conf=ui.confirm==='del-qris';
   return sheetWrap('QRIS toko',`<div class="stack">
@@ -903,6 +979,7 @@ function screenLainnya(){
   ${item('data','Data & cadangan','Jumlah data, status sinkron'+(can('wipe')?', hapus semua data':''))}</div>
   <h2 class="sec">Akun</h2>
   <div class="card rows"><div class="r"><span class="ic in">${esc((state.me.user.name||'?').slice(0,2).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(state.me.user.name)}</span><span class="s" style="display:block">${ROLE_LABEL[state.role]||state.role} · ${esc(state.me.user.phone)}</span></span></div>
+  ${item('billing','Langganan Kasjo',esc(subLabel()))}
   ${item('pin','Ganti PIN','PIN 6 angka untuk masuk')}
   ${can('users')?item('users','Pengguna & kasir','Tambah kasir, atur peran, reset PIN'):''}
   ${can('audit')?item('audit','Riwayat aktivitas','Siapa mencatat, mengubah atau menghapus apa'):''}
@@ -1248,7 +1325,7 @@ function sheetUsers(){
   ${U.temp?`<div class="tempin">PIN sementara untuk ${esc(U.temp.name)}:<br><code>${esc(U.temp.pin)}</code><br><span class="small">Kirim ke ${esc(U.temp.name)} lewat WhatsApp. PIN wajib diganti saat pertama masuk.</span></div>`:''}
   ${U.err?`<div class="auth-err">${esc(U.err)}</div>`:''}
   <div class="card rows">${list}</div>
-  <h2 class="sec">Tambah pengguna</h2>
+  <h2 class="sec">Tambah pengguna <span class="muted small" style="font-family:var(--f-body);font-weight:500">${U.list?U.list.filter(u=>!u.disabled).length:'-'} dari ${MAX_USERS} aktif</span></h2>
   <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:12px">
     <div class="field"><label for="ua-name">Nama</label><input id="ua-name" class="inp" data-text="users.add.name" value="${esc(a.name)}" placeholder="Contoh: Rina"></div>
     <div class="field"><label for="ua-phone">No. WhatsApp (untuk masuk)</label><input id="ua-phone" class="inp" inputmode="tel" data-text="users.add.phone" value="${esc(a.phone)}" placeholder="08…"></div>
@@ -1290,6 +1367,7 @@ function renderSheet(){
     case'scan':h=sheetScan();break;
     case'qrisSet':h=sheetQrisSet();break;
     case'qrisShow':h=sheetQrisShow();break;
+    case'billing':h=sheetBilling();break;
     case'users':h=sheetUsers();break;
     case'audit':h=sheetAudit();break;
   }
@@ -1310,7 +1388,7 @@ function renderMain(){
   if(!state.cfg){app.innerHTML=can('settings')?screenOnboard():`<div class="wrap onb"><div class="mark">${LOGO}<span>Kas<b>jo</b></span></div><h1>Toko belum siap</h1><p class="muted" style="margin:0">Pemilik toko belum menyelesaikan pengaturan awal (rekening dan modal). Minta pemilik membuka Kasjo dulu, lalu muat ulang halaman ini.</p><button class="btn ghost block" data-act="logout">Keluar</button></div>`;return}
   const r=route();
   const body={beranda:screenHome,catat:screenCatat,kasbon:screenKasbon,laporan:screenLaporan,lainnya:screenLainnya}[r]();
-  app.innerHTML=topBar()+`<main class="wrap">${body}</main>`+navBar(r);
+  app.innerHTML=topBar()+subBanner()+`<main class="wrap">${body}</main>`+navBar(r);
 }
 function renderWithFocus(fn){
   const a=document.activeElement;const id=a&&a.id;let ss=null,se=null;
@@ -1387,6 +1465,7 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
   const act=el.dataset.act,v=el.dataset.v;
   if(act==='close-bg'){if(e.target===el)closeSheet();return}
+  if(isExpired()&&WRITE_ACTS.has(act)){e.preventDefault();toast('Masa langganan habis. '+(state.role==='owner'?'Perpanjang di Lainnya → Langganan.':'Minta pemilik toko memperpanjang.'));if(state.role==='owner'&&!(ui.sheet&&ui.sheet.type==='billing'))openSheet('billing');return}
   const H=handlers[act];if(H){e.preventDefault&&el.tagName!=='A'&&e.preventDefault();H(el,v)}
 });
 const handlers={
@@ -1403,6 +1482,7 @@ const handlers={
     if(s==='users'){ui.users={list:null,err:'',add:{name:'',phone:'',role:'kasir'},temp:null};loadUsers()}
     if(s==='audit'){ui.audit=null;loadAudit()}
     if(s==='data')ui.wipePin='';
+    if(s==='billing'){ui.bill=null;loadBilling()}
     openSheet(s)},
   'go-catat':(el)=>{setType(el.dataset.type);location.hash='catat'},
   ftype:(el,v)=>{setType(v);renderMain()},
@@ -1575,6 +1655,11 @@ const handlers={
     closeSheet();openSheet('products');toast('Stok '+p.name+' disesuaikan '+(delta>0?'+':'')+delta);
   }),
   scan:(el,v)=>{ui.scanFor=v;openSheet('scan');startScan()},
+  'bill-reload':()=>{ui.bill=null;renderSheet();loadBilling()},
+  'bill-plan':(el,v)=>guard(async()=>{await api('pay_create',{plan:v});await loadBilling()}),
+  'bill-cancel':(el)=>guard(async()=>{await api('pay_cancel',{id:+el.dataset.id});await loadBilling()}),
+  'bill-proof':(el)=>{ui.billProofId=el.dataset.id;const f=$('#proof-file');if(f)f.click()},
+  'bill-copy':(el,v)=>copyText(String(v),null,'Nominal disalin'),
   'sync-now':()=>{sync.err='';updateSyncChip();flushSoon(0)},
   'auth-mode':(el,v)=>{ui.auth.mode=v;ui.auth.err='';renderMain()},
   logout:()=>guard(async()=>{
@@ -1622,8 +1707,8 @@ async function addAccount(n,kind){
   const cfg=clone(state.cfg);let id=slug(n);if(cfg.accounts.some(a=>a.id===id))id=id+'-'+uid().slice(-4);
   cfg.accounts.push({id,name:n,kind:kind||'bank'});await saveCfg(cfg);toast(n+' ditambahkan');return id;
 }
-function copyText(txt,node){
-  const done=()=>toast('Struk disalin');
+function copyText(txt,node,msg){
+  const done=()=>toast(msg||'Struk disalin');
   try{navigator.clipboard.writeText(txt).then(done,()=>sel())}catch(e){sel()}
   function sel(){if(!node)return;const r=document.createRange();r.selectNodeContents(node);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Teks dipilih, tekan salin')}
 }

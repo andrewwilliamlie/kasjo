@@ -18,6 +18,7 @@ set_exception_handler(function (Throwable $e) {
 ini_set('display_errors', '0');
 
 if (!installed()) fail('not_installed', 'Server belum dipasang.', 503);
+migrate();
 
 $action = (string)($_GET['a'] ?? '');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -36,7 +37,9 @@ function user_out(array $u): array {
     return ['id' => (int)$u['id'], 'name' => $u['name'], 'phone' => $u['phone'], 'role' => $u['role'], 'mustChange' => (bool)$u['must_change']];
 }
 function toko_out(array $t): array {
-    return ['id' => (int)$t['id'], 'name' => $t['name'], 'plan' => $t['plan'], 'trialUntil' => (int)$t['trial_until'], 'paidUntil' => (int)$t['paid_until']];
+    $st = toko_status($t);
+    return ['id' => (int)$t['id'], 'name' => $t['name'], 'plan' => $t['plan'], 'trialUntil' => (int)$t['trial_until'], 'paidUntil' => (int)$t['paid_until'],
+        'active' => $st['active'], 'until' => $st['until'], 'status' => $st['status'], 'daysLeft' => $st['daysLeft']];
 }
 function load_toko(int $id): array { $st = db()->prepare('SELECT * FROM toko WHERE id = ?'); $st->execute([$id]); return $st->fetch() ?: []; }
 function new_session(int $uid): string {
@@ -148,6 +151,7 @@ case 'pull': {
 case 'push': {
     need_post($method);
     $me = auth(); $tid = (int)$me['toko_id']; $uid = (int)$me['id']; $role = $me['role'];
+    if (!toko_status(load_toko($tid))['active']) fail('expired', 'Masa langganan Kasjo sudah habis. Data masih bisa dilihat. Perpanjang di Lainnya → Langganan untuk mencatat lagi.', 402);
     $srv = now_ms(); $accepted = []; $rejected = [];
     $recs = $body['records'] ?? [];
     if (!is_array($recs) || count($recs) > 500) fail('too_many', 'Terlalu banyak data sekaligus.');
@@ -216,8 +220,8 @@ case 'user_add': {
     if ($name === '') fail('name', 'Isi nama pengguna.');
     if (!in_array($role, ['manager', 'kasir'], true)) fail('role', 'Peran tidak valid.');
     if (!valid_pin($pin)) fail('pin', 'PIN sementara harus 6 angka dan tidak mudah ditebak.');
-    $c = db()->prepare('SELECT COUNT(*) FROM users WHERE toko_id = ?'); $c->execute([$me['toko_id']]);
-    if ((int)$c->fetchColumn() >= 20) fail('limit', 'Maksimal 20 pengguna per toko.');
+    $c = db()->prepare('SELECT COUNT(*) FROM users WHERE toko_id = ? AND disabled = 0'); $c->execute([$me['toko_id']]);
+    if ((int)$c->fetchColumn() >= MAX_USERS) fail('limit', 'Paket Kasjo berisi ' . MAX_USERS . ' pengguna aktif per toko (termasuk pemilik). Nonaktifkan pengguna lain dulu.');
     if (find_user_by_phone($phone)) fail('exists', 'Nomor ini sudah dipakai akun Kasjo lain.', 409);
     db()->prepare('INSERT INTO users (toko_id, phone, name, pin_hash, role, must_change, created_at) VALUES (?,?,?,?,?,1,?)')
         ->execute([$me['toko_id'], $phone, $name, password_hash($pin, PASSWORD_DEFAULT), $role, now_ms()]);
@@ -241,6 +245,10 @@ case 'user_update': {
     }
     if (isset($body['disabled'])) {
         $dis = $body['disabled'] ? 1 : 0;
+        if (!$dis && (int)$u['disabled'] === 1) {
+            $c = db()->prepare('SELECT COUNT(*) FROM users WHERE toko_id = ? AND disabled = 0'); $c->execute([$tid]);
+            if ((int)$c->fetchColumn() >= MAX_USERS) fail('limit', 'Sudah ada ' . MAX_USERS . ' pengguna aktif. Nonaktifkan pengguna lain dulu.');
+        }
         db()->prepare('UPDATE users SET disabled = ? WHERE id = ?')->execute([$dis, $id]);
         if ($dis) db()->prepare('DELETE FROM sessions WHERE user_id = ?')->execute([$id]);
         audit($tid, $mid, 'pengguna', null, null, ($dis ? 'Menonaktifkan ' : 'Mengaktifkan ') . $u['name']);
@@ -275,6 +283,55 @@ case 'wipe': {
     audit($tid, (int)$me['id'], 'hapus_semua', null, null, 'Menghapus semua data toko');
     $pdo->commit();
     out(['ok' => true, 'now' => now_ms()]);
+}
+
+case 'billing': {
+    $me = auth(); $tid = (int)$me['toko_id']; $t = load_toko($tid);
+    $plans = []; foreach (PLANS as $k => $p) $plans[] = ['id' => $k, 'label' => $p['label'], 'days' => $p['days'], 'price' => $p['price']];
+    $st = db()->prepare('SELECT id, plan, days, amount, code, status, note, created_at, decided_at, (proof IS NOT NULL) AS has_proof FROM payments WHERE toko_id = ? ORDER BY id DESC LIMIT 12');
+    $st->execute([$tid]);
+    $pay = array_map(fn($r) => ['id' => (int)$r['id'], 'plan' => $r['plan'], 'label' => PLANS[$r['plan']]['label'] ?? ($r['plan'] === 'manual' ? 'Perpanjangan dari support Kasjo (' . (int)$r['days'] . ' hari)' : $r['plan']), 'amount' => (int)$r['amount'], 'code' => (int)$r['code'], 'status' => $r['status'], 'note' => $r['note'], 'createdAt' => (int)$r['created_at'], 'decidedAt' => $r['decided_at'] ? (int)$r['decided_at'] : null, 'hasProof' => (bool)$r['has_proof']], $st->fetchAll());
+    $open = null; foreach ($pay as $p) if (in_array($p['status'], ['pending', 'review'], true)) { $open = $p; break; }
+    $res = ['ok' => true, 'toko' => toko_out($t), 'plans' => $plans, 'maxUsers' => MAX_USERS, 'payments' => $pay, 'open' => $open, 'supportWa' => config()['support_wa'] ?? ''];
+    if ($open) { $res['payQris'] = app_setting('pay_qris'); $res['payBank'] = app_setting('pay_bank'); }
+    out($res);
+}
+
+case 'pay_create': {
+    need_post($method);
+    $me = auth(); need_role($me, ['owner'], 'Hanya pemilik toko yang bisa membayar langganan.');
+    $plan = (string)($body['plan'] ?? '');
+    if (!isset(PLANS[$plan])) fail('plan', 'Pilih paket langganan.');
+    $tid = (int)$me['toko_id']; $now = now_ms();
+    // one open payment at a time; a new choice replaces an unpaid one
+    db()->prepare("UPDATE payments SET status = 'cancelled', updated_at = ? WHERE toko_id = ? AND status = 'pending'")->execute([$now, $tid]);
+    $st = db()->prepare("SELECT COUNT(*) FROM payments WHERE toko_id = ? AND status = 'review'"); $st->execute([$tid]);
+    if ((int)$st->fetchColumn() > 0) fail('review', 'Masih ada pembayaran yang sedang dicek tim Kasjo. Tunggu konfirmasi dulu.', 409);
+    $code = random_int(1, 299); // unique code so support can match the transfer to this toko
+    $amount = PLANS[$plan]['price'] + $code;
+    db()->prepare('INSERT INTO payments (toko_id, user_id, plan, days, amount, code, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)')
+        ->execute([$tid, $me['id'], $plan, PLANS[$plan]['days'], $amount, $code, 'pending', $now, $now]);
+    audit($tid, (int)$me['id'], 'langganan', null, null, 'Memilih paket ' . PLANS[$plan]['label'] . ', tagihan ' . rupiah($amount));
+    out(['ok' => true]);
+}
+
+case 'pay_proof': {
+    need_post($method);
+    $me = auth(); need_role($me, ['owner'], 'Hanya pemilik toko yang bisa membayar langganan.');
+    $id = (int)($body['id'] ?? 0); $img = (string)($body['proof'] ?? '');
+    if (!preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $img) || strlen($img) > 900000) fail('proof', 'Bukti bayar harus gambar (JPG/PNG) dan tidak terlalu besar.');
+    $st = db()->prepare("UPDATE payments SET proof = ?, status = 'review', updated_at = ? WHERE id = ? AND toko_id = ? AND status IN ('pending','review')");
+    $st->execute([$img, now_ms(), $id, $me['toko_id']]);
+    if ($st->rowCount() === 0) fail('not_found', 'Tagihan tidak ditemukan atau sudah diproses.', 404);
+    audit((int)$me['toko_id'], (int)$me['id'], 'langganan', null, null, 'Mengunggah bukti bayar langganan');
+    out(['ok' => true]);
+}
+
+case 'pay_cancel': {
+    need_post($method);
+    $me = auth(); need_role($me, ['owner'], 'Hanya pemilik toko yang bisa membayar langganan.');
+    db()->prepare("UPDATE payments SET status = 'cancelled', updated_at = ? WHERE id = ? AND toko_id = ? AND status = 'pending'")->execute([now_ms(), (int)($body['id'] ?? 0), $me['toko_id']]);
+    out(['ok' => true]);
 }
 
 default:

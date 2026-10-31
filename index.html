@@ -21,14 +21,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@400;500;700&display=swap">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"SoftwareApplication","name":"Kasjo","alternateName":"Kasir Agen Hausjo","applicationCategory":"FinanceApplication","operatingSystem":"Android, iOS, Web","url":"https://kasjo.site/","description":"Aplikasi pembukuan agen BRILink dan Mini ATM: catat transaksi, fee admin otomatis, saldo kas dan bank, kasbon, tutup kasir.","inLanguage":"id","offers":{"@type":"Offer","price":"0","priceCurrency":"IDR","description":"Uji coba gratis 30 hari"},"publisher":{"@type":"Organization","name":"PT Hausjo Digital Pro","url":"https://hausjo.id"}},
+ {"@type":"SoftwareApplication","name":"Kasjo","alternateName":"Kasir Agen Hausjo","applicationCategory":"FinanceApplication","operatingSystem":"Android, iOS, Web","url":"https://kasjo.site/","description":"Aplikasi pembukuan agen BRILink dan Mini ATM: catat transaksi, fee admin otomatis, saldo kas dan bank, kasbon, tutup kasir.","inLanguage":"id","offers":[{"@type":"Offer","name":"Uji coba 30 hari","price":"0","priceCurrency":"IDR"},{"@type":"Offer","name":"Paket 1 bulan","price":"29000","priceCurrency":"IDR"},{"@type":"Offer","name":"Paket 3 bulan","price":"79000","priceCurrency":"IDR"},{"@type":"Offer","name":"Paket 1 tahun","price":"249000","priceCurrency":"IDR"}],"publisher":{"@type":"Organization","name":"PT Hausjo Digital Pro","url":"https://hausjo.id"}},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Apa itu Kasjo?","acceptedAnswer":{"@type":"Answer","text":"Kasjo (Kasir Agen Hausjo) adalah aplikasi pembukuan untuk agen BRILink, agen bank lain, dan Mini ATM. Kasjo mencatat setiap transaksi, menghitung fee admin otomatis, dan menunjukkan saldo kas tunai, saldo tiap bank, serta laba harian."}},
   {"@type":"Question","name":"Apakah Kasjo aplikasi resmi BRI?","acceptedAnswer":{"@type":"Answer","text":"Bukan. Kasjo adalah aplikasi pembukuan buatan PT Hausjo Digital Pro, terpisah dari aplikasi transaksi bank. Transaksi tetap dilakukan di mesin EDC atau aplikasi agen, lalu dicatat di Kasjo."}},
   {"@type":"Question","name":"Bank apa saja yang bisa dicatat?","acceptedAnswer":{"@type":"Answer","text":"Semua rekening dan EDC yang dipakai agen: BRI (BRILink), Mandiri Agen, BNI Agen46, BCA, BSI, BTN, bank daerah, dan Mini ATM. Nama rekening bisa ditambah sendiri."}},
   {"@type":"Question","name":"Bisa dipakai di HP dan oleh kasir?","acceptedAnswer":{"@type":"Answer","text":"Bisa. Kasjo berjalan di HP Android, iPhone, dan laptop lewat browser, dan bisa dipasang seperti aplikasi. Pemilik bisa menambah kasir dengan nomor WhatsApp dan PIN masing-masing. Kasir hanya bisa mencatat, tidak bisa menghapus."}},
   {"@type":"Question","name":"Kalau sinyal hilang, transaksi tetap bisa dicatat?","acceptedAnswer":{"@type":"Answer","text":"Bisa. Kasjo menyimpan catatan di HP lebih dulu dan mengirimnya ke server begitu internet tersambung lagi."}},
-  {"@type":"Question","name":"Berapa biayanya?","acceptedAnswer":{"@type":"Answer","text":"Kasjo bisa dicoba gratis selama 30 hari tanpa kartu kredit. Informasi paket berlangganan akan diumumkan di halaman ini."}}
+  {"@type":"Question","name":"Berapa biayanya?","acceptedAnswer":{"@type":"Answer","text":"Kasjo gratis dicoba 30 hari tanpa kartu kredit. Setelah itu Rp 29.000 per bulan, Rp 79.000 per 3 bulan, atau Rp 249.000 per tahun, untuk 1 toko dengan hingga 3 pengguna dan semua fitur. Pembayaran lewat QRIS atau transfer."}}
  ]}
 ]}
 </script>
@@ -112,6 +112,15 @@ section.soft{background:var(--soft)}
 .compare td:nth-child(2){color:var(--deep);font-weight:500}
 .compare td:nth-child(3){color:var(--muted)}
 
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:820px){.prices{grid-template-columns:1fr}}
+.price{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:10px;position:relative}
+.price.best{border:2px solid var(--teal);box-shadow:0 12px 28px rgb(14 124 115 / .14)}
+.price .tag{position:absolute;top:-12px;left:24px;background:var(--orange);color:#fff;font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px}
+.price h3{font-size:18px}.price .amt{font-family:var(--f-display);font-weight:700;font-size:34px;color:var(--deep);line-height:1.1}
+.price .amt small{font-size:15px;color:var(--muted);font-weight:500}.price .per{color:var(--muted);font-size:14px;margin:0}
+.price ul{margin:4px 0 8px;padding-left:18px;color:var(--ink);font-size:15px}.price .btn{margin-top:auto}
+.price-note{margin-top:16px;color:var(--muted);font-size:14px}
 .faq{max-width:760px;display:flex;flex-direction:column;gap:10px}
 .faq details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
 .faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:12px}
@@ -130,7 +139,7 @@ footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;
 <body>
 <header class="nav"><div class="wrap">
   <a class="mark" href="/" aria-label="Kasjo beranda"><img src="app/icons/icon-192.png" alt="" width="34" height="34"><span>Kas<b>jo</b></span></a>
-  <nav aria-label="Menu"><a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#faq">FAQ</a><a href="https://app.kasjo.site/">Masuk</a><a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis</a></nav>
+  <nav aria-label="Menu"><a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#harga">Harga</a><a href="#faq">FAQ</a><a href="https://app.kasjo.site/">Masuk</a><a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis</a></nav>
 </div></header>
 
 <main>
@@ -201,6 +210,24 @@ footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;
   </div>
 </section>
 
+<section id="harga">
+  <div class="wrap">
+    <div class="sec-head"><span class="k">Harga</span><h2>Gratis 30 hari, lalu mulai Rp 29.000 per bulan</h2><p>Semua paket berisi semua fitur, untuk 1 toko dengan hingga 3 pengguna (pemilik + 2 kasir atau manajer).</p></div>
+    <div class="prices">
+      <div class="price"><h3>1 bulan</h3><div class="amt">Rp 29.000</div><p class="per">Bayar per bulan</p>
+        <ul><li>Transaksi agen &amp; fee otomatis</li><li>Kasir toko, stok &amp; QRIS</li><li>Laporan, kasbon, tutup kasir</li></ul>
+        <a class="btn ghost" href="https://app.kasjo.site/?daftar">Coba gratis dulu</a></div>
+      <div class="price"><h3>3 bulan</h3><div class="amt">Rp 79.000</div><p class="per">≈ Rp 26.333 / bulan · hemat 9%</p>
+        <ul><li>Semua fitur paket bulanan</li><li>Bayar 3 bulan sekaligus</li><li>Cetak struk Bluetooth</li></ul>
+        <a class="btn ghost" href="https://app.kasjo.site/?daftar">Coba gratis dulu</a></div>
+      <div class="price best"><span class="tag">Paling hemat</span><h3>1 tahun</h3><div class="amt">Rp 249.000</div><p class="per">≈ Rp 20.750 / bulan · hemat 28%</p>
+        <ul><li>Semua fitur</li><li>Bayar sekali setahun</li><li>Tanpa kepikiran perpanjang</li></ul>
+        <a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis 30 hari</a></div>
+    </div>
+    <p class="price-note">Tanpa kartu kredit. Bayar lewat QRIS atau transfer langsung dari aplikasi. Kalau masa langganan habis, data tetap aman dan bisa dilihat.</p>
+  </div>
+</section>
+
 <section class="soft" id="faq">
   <div class="wrap">
     <div class="sec-head"><span class="k">FAQ</span><h2>Pertanyaan yang sering ditanya</h2></div>
@@ -210,7 +237,8 @@ footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;
       <details><summary>Bank apa saja yang bisa dicatat?</summary><p>Semua rekening dan EDC yang dipakai agen: BRI (BRILink), Mandiri Agen, BNI Agen46, BCA, BSI, BTN, bank daerah, dan Mini ATM. Nama rekening bisa ditambah sendiri.</p></details>
       <details><summary>Bisa dipakai di HP dan oleh kasir?</summary><p>Bisa. Kasjo berjalan di HP Android, iPhone, dan laptop lewat browser, dan bisa dipasang seperti aplikasi. Pemilik bisa menambah kasir dengan nomor WhatsApp dan PIN masing-masing. Kasir hanya bisa mencatat, tidak bisa menghapus.</p></details>
       <details><summary>Kalau sinyal hilang, transaksi tetap bisa dicatat?</summary><p>Bisa. Kasjo menyimpan catatan di HP lebih dulu dan mengirimnya ke server begitu internet tersambung lagi.</p></details>
-      <details><summary>Berapa biayanya?</summary><p>Kasjo bisa dicoba gratis selama 30 hari tanpa kartu kredit. Informasi paket berlangganan akan diumumkan di halaman ini.</p></details>
+      <details><summary>Berapa biayanya?</summary><p>Kasjo gratis dicoba 30 hari tanpa kartu kredit. Setelah itu Rp 29.000 per bulan, Rp 79.000 per 3 bulan, atau Rp 249.000 per tahun, untuk 1 toko dengan hingga 3 pengguna dan semua fitur. Pembayaran lewat QRIS atau transfer.</p></details>
+      <details><summary>Apa yang terjadi kalau masa langganan habis?</summary><p>Data tidak hilang. Kasjo berubah menjadi mode lihat saja: laporan, kasbon dan riwayat tetap bisa dibuka dan diunduh. Begitu langganan diperpanjang, kamu bisa mencatat lagi seperti biasa.</p></details>
     </div>
   </div>
 </section>

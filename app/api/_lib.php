@@ -2,11 +2,19 @@
 // Kasjo: shared backend code. Not reachable from the web (blocked in api/.htaccess).
 declare(strict_types=1);
 
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
+const SCHEMA_VERSION = '2'; // bump when tables are added; migrate() creates them on the next request
 const SESSION_DAYS = 90;
 const TRIAL_DAYS = 30;
 const KINDS = ['trx', 'kasbon', 'closing', 'product', 'qris'];
 const ROLES = ['owner', 'manager', 'kasir'];
+const MAX_USERS = 3; // active users per toko, owner included
+// subscription plans: price in rupiah, days added
+const PLANS = [
+    '1m'  => ['label' => '1 bulan', 'days' => 30,  'price' => 29000],
+    '3m'  => ['label' => '3 bulan', 'days' => 90,  'price' => 79000],
+    '12m' => ['label' => '1 tahun', 'days' => 365, 'price' => 249000],
+];
 date_default_timezone_set('Asia/Jakarta');
 
 /* ---------- config ---------- */
@@ -118,6 +126,28 @@ function schema(string $driver): array {
             at BIGINT NOT NULL
         )$tail",
         "CREATE INDEX idx_audit_toko ON audit_log (toko_id, at)",
+        // subscription payments: the agent pays to Hausjo's QRIS, uploads proof, support approves
+        "CREATE TABLE IF NOT EXISTS payments (
+            id $ai,
+            toko_id INT$u NOT NULL,
+            user_id INT$u NULL,
+            plan VARCHAR(5) NOT NULL,
+            days INT NOT NULL,
+            amount INT NOT NULL,
+            code INT NOT NULL DEFAULT 0,
+            status VARCHAR(10) NOT NULL DEFAULT 'pending',
+            proof $txt NULL,
+            note VARCHAR(300) NULL,
+            created_at BIGINT NOT NULL,
+            updated_at BIGINT NOT NULL,
+            decided_at BIGINT NULL
+        )$tail",
+        "CREATE INDEX idx_payments_status ON payments (status, created_at)",
+        "CREATE INDEX idx_payments_toko ON payments (toko_id, created_at)",
+        "CREATE TABLE IF NOT EXISTS app_settings (
+            k VARCHAR(40) NOT NULL PRIMARY KEY,
+            v $txt NULL
+        )$tail",
         "CREATE TABLE IF NOT EXISTS attempts (
             id $ai,
             k VARCHAR(190) NOT NULL,
@@ -135,6 +165,42 @@ function create_schema(PDO $pdo, string $driver): void {
         }
     }
 }
+
+// Runs the (idempotent) schema once per SCHEMA_VERSION, so new tables appear after a deploy without reinstalling.
+function migrate(): void {
+    $marker = dirname(config_path()) . '/.kasjo-schema';
+    if (@file_get_contents($marker) === SCHEMA_VERSION) return;
+    create_schema(db(), config()['db']['driver'] ?? 'mysql');
+    @file_put_contents($marker, SCHEMA_VERSION, LOCK_EX);
+}
+function app_setting(string $k): ?string { $st = db()->prepare('SELECT v FROM app_settings WHERE k = ?'); $st->execute([$k]); $v = $st->fetchColumn(); return $v === false ? null : $v; }
+function set_app_setting(string $k, ?string $v): void {
+    db()->prepare('DELETE FROM app_settings WHERE k = ?')->execute([$k]);
+    if ($v !== null) db()->prepare('INSERT INTO app_settings (k, v) VALUES (?, ?)')->execute([$k, $v]);
+}
+
+/* ---------- subscription ---------- */
+// Active until the later of the trial end and the paid end. 'paid' once a payment has been approved and not yet run out.
+function toko_status(array $t): array {
+    $now = now_ms(); $trial = (int)$t['trial_until']; $paid = (int)$t['paid_until']; $until = max($trial, $paid);
+    $status = $until <= $now ? 'expired' : ($paid > $now ? 'paid' : 'trial');
+    return ['active' => $until > $now, 'until' => $until, 'status' => $status, 'daysLeft' => $until > $now ? (int)ceil(($until - $now) / 86400000) : 0];
+}
+// Extends from the end of the current period (or today if already expired), so paying early loses nothing.
+function approve_payment(int $id, string $note = ''): ?array {
+    $pdo = db(); $pdo->beginTransaction();
+    $st = $pdo->prepare('SELECT * FROM payments WHERE id = ?'); $st->execute([$id]); $p = $st->fetch();
+    if (!$p || !in_array($p['status'], ['pending', 'review'], true)) { $pdo->rollBack(); return null; }
+    $t = load_toko_row((int)$p['toko_id']);
+    $base = max(now_ms(), (int)$t['trial_until'], (int)$t['paid_until']);
+    $newUntil = $base + (int)$p['days'] * 86400000;
+    $pdo->prepare('UPDATE toko SET paid_until = ?, plan = ? WHERE id = ?')->execute([$newUntil, $p['plan'], $p['toko_id']]);
+    $pdo->prepare("UPDATE payments SET status = 'approved', note = ?, decided_at = ?, updated_at = ? WHERE id = ?")->execute([mb_substr($note, 0, 300) ?: null, now_ms(), now_ms(), $id]);
+    $pdo->commit();
+    audit((int)$p['toko_id'], null, 'langganan', null, null, 'Pembayaran ' . (PLANS[$p['plan']]['label'] ?? $p['plan']) . ' ' . rupiah($p['amount']) . ' dikonfirmasi, aktif s/d ' . date('d M Y', intdiv($newUntil, 1000)));
+    return ['until' => $newUntil];
+}
+function load_toko_row(int $id): array { $st = db()->prepare('SELECT * FROM toko WHERE id = ?'); $st->execute([$id]); return $st->fetch() ?: []; }
 
 /* ---------- helpers ---------- */
 function now_ms(): int { return (int)floor(microtime(true) * 1000); }
