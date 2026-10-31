@@ -14,6 +14,16 @@ if (!installed()) { fwrite(STDERR, "Kasjo is not installed\n"); exit(1); }
 $dir = getenv('KASJO_BACKUP_DIR') ?: dirname(config_path()) . '/backups';
 if (!is_dir($dir) && !@mkdir($dir, 0700, true)) { fwrite(STDERR, "Cannot create $dir\n"); exit(1); }
 
+// With --if-due (used by the hourly cron, so the server's own timezone does not matter):
+// back up in the 02:00 hour Jakarta time, or catch up when the newest backup is over 26 hours old.
+if (in_array('--if-due', $argv ?? [], true)) {
+    $latest = 0;
+    foreach (glob($dir . '/kasjo-*.sql.gz') ?: [] as $f) $latest = max($latest, (int)filemtime($f));
+    $age = time() - $latest;
+    $due = ((int)date('G') === 2 && $age > 2 * 3600) || $age > 26 * 3600;
+    if (!$due) exit(0);
+}
+
 $pdo = db();
 $driver = config()['db']['driver'] ?? 'mysql';
 $tables = ['toko', 'users', 'sessions', 'records', 'audit_log', 'attempts'];

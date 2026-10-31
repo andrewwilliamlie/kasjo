@@ -59,7 +59,7 @@ The app keeps a copy on the phone (localStorage) and a queue of unsent changes, 
 
 ## Backups
 
-- **Nightly copy:** a Hostinger cron job runs `php /home/u283956056/domains/kasjo.site/public_html/tools/backup.php` every night at 02:00 WIB. It writes `kasjo-YYYYMMDD-HHMMSS.sql.gz` to `/home/u283956056/domains/kasjo.site/backups/` (outside `public_html`, never downloadable from the web) and keeps the last 14 days.
+- **Nightly copy:** a Hostinger cron job runs `php /home/u283956056/domains/kasjo.site/public_html/tools/backup.php --if-due` every hour; the script only backs up in the 02:00 hour Jakarta time (or catches up if the newest copy is over 26 hours old). It writes `kasjo-YYYYMMDD-HHMMSS.sql.gz` to `/home/u283956056/domains/kasjo.site/backups/` (outside `public_html`, never downloadable from the web) and keeps the last 14 days.
 - **Weekly copy:** Hostinger's own account backups (hPanel → Files → Backups) as a second layer.
 - `tools/` is blocked from the web by the root `.htaccess`, and the script refuses to run outside the command line.
 
@@ -74,6 +74,15 @@ To restore only one toko, import into a new empty database first and copy that t
 ## Deploying
 
 Pushes to `main` deploy to kasjo.site through Hostinger Git auto-deployment (the repository root becomes `public_html`).
+
+## Receipt printing
+
+Lainnya → Printer struk (settings are saved per phone):
+
+- **Bluetooth langsung**: Web Bluetooth from Chrome on Android or a laptop, for BLE thermal printers. The app finds the printer's writable characteristic and sends ESC/POS in 20-byte chunks. The printer picker opens once per app session.
+- **Lewat aplikasi RawBT**: hands the ESC/POS bytes to the free RawBT Android app (`intent:base64,...;package=ru.a402d.rawbtprinter`), which works with most Bluetooth Classic and BLE printers.
+- 58 mm (32 characters) or 80 mm (48 characters), custom footer line, optional auto-print after saving a transaction.
+- iPhone browsers have no Web Bluetooth: share the receipt by WhatsApp instead.
 
 ## Testing locally
 

@@ -2,7 +2,7 @@
 // Kasjo: shared backend code. Not reachable from the web (blocked in api/.htaccess).
 declare(strict_types=1);
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const SESSION_DAYS = 90;
 const TRIAL_DAYS = 30;
 const KINDS = ['trx', 'kasbon', 'closing'];
