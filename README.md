@@ -20,6 +20,7 @@ Bookkeeping app for BRILink and Mini ATM agents, by PT Hausjo Digital Pro.
 | `app/install.php` | One-time installer. Writes `kasjo-config.php` next to `public_html` and creates the tables, then locks itself |
 | `app/admin.php` | Hausjo support page: find a toko, reset a PIN, disable a user or toko |
 | `tools/backup.php` | Nightly database backup, run by cron (command line only, blocked from the web) |
+| `tools/seed-demo.php` | Fills one toko with demo data for videos and the Play reviewer: `--phone=08…` previews, add `--replace` to write (command line only) |
 
 ## Accounts and roles
 
