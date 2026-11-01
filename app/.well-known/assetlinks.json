@@ -1,18 +1,28 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "site.kasjo.app",
-      "sha256_cert_fingerprints": ["49:83:98:9C:5B:FD:CB:6C:3C:40:12:65:2D:B2:7E:A6:0D:FD:D7:80:93:8A:35:4D:FC:D7:59:90:30:7B:50:74"]
+      "sha256_cert_fingerprints": [
+        "49:83:98:9C:5B:FD:CB:6C:3C:40:12:65:2D:B2:7E:A6:0D:FD:D7:80:93:8A:35:4D:FC:D7:59:90:30:7B:50:74",
+        "CB:21:EF:FA:71:F4:E3:E2:B7:A3:C8:CC:39:3D:82:FE:1B:87:B4:13:D3:0D:39:C6:1C:5D:50:DC:53:84:B2:A4"
+      ]
     }
   },
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "site.kasjo.app.twa",
-      "sha256_cert_fingerprints": ["49:83:98:9C:5B:FD:CB:6C:3C:40:12:65:2D:B2:7E:A6:0D:FD:D7:80:93:8A:35:4D:FC:D7:59:90:30:7B:50:74"]
+      "sha256_cert_fingerprints": [
+        "49:83:98:9C:5B:FD:CB:6C:3C:40:12:65:2D:B2:7E:A6:0D:FD:D7:80:93:8A:35:4D:FC:D7:59:90:30:7B:50:74",
+        "CB:21:EF:FA:71:F4:E3:E2:B7:A3:C8:CC:39:3D:82:FE:1B:87:B4:13:D3:0D:39:C6:1C:5D:50:DC:53:84:B2:A4"
+      ]
     }
   }
 ]
