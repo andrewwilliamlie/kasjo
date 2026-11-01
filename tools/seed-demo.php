@@ -28,7 +28,7 @@ if (!$toko || (int)$toko['disabled'] === 1) { fwrite(STDERR, "Toko $tid is missi
 $tokoName = isset($opt['name']) ? mb_substr(trim((string)$opt['name']), 0, 120) : (string)$toko['name'];
 if ($tokoName === '') $tokoName = (string)$toko['name'];
 
-$cnt = $pdo->prepare('SELECT kind, COUNT(*) n FROM records WHERE toko_id = ? AND deleted = 0 GROUP BY kind'); $cnt->execute([$tid]);
+$cnt = $pdo->prepare('SELECT kind, COUNT(*) n FROM records WHERE toko_id = ? AND deleted = 0 AND kind <> \'qris\' GROUP BY kind'); $cnt->execute([$tid]);
 $existing = array_column($cnt->fetchAll(), 'n', 'kind');
 $existingTotal = array_sum(array_map('intval', $existing));
 
@@ -185,8 +185,11 @@ if (!isset($opt['replace'])) { echo "\nPreview only, nothing changed. Run again 
 $srv = now_ms();
 $pdo->beginTransaction();
 try {
-    // soft-delete what is there now; the old content stays in `data`, only hidden from the app
-    $pdo->prepare('UPDATE records SET deleted = 1, updated_at = ?, srv = ?, updated_by = ? WHERE toko_id = ? AND deleted = 0')->execute([$srv, $srv, $uid, $tid]);
+    // soft-delete what is there now; the old content stays in `data`, only hidden from the app.
+    // The shop QRIS picture is kept: it is the toko's real payment code, not sample data.
+    $pdo->prepare("UPDATE records SET deleted = 1, updated_at = ?, srv = ?, updated_by = ? WHERE toko_id = ? AND deleted = 0 AND kind <> 'qris'")->execute([$srv, $srv, $uid, $tid]);
+    // bring back a QRIS picture an earlier version of this script hid (one deleted in the app has its data cleared to '{}')
+    $pdo->prepare("UPDATE records SET deleted = 0, updated_at = ?, srv = ? WHERE toko_id = ? AND kind = 'qris' AND deleted = 1 AND data <> '{}'")->execute([$srv, $srv, $tid]);
     $ins = $pdo->prepare('INSERT INTO records (toko_id, kind, id, data, updated_at, deleted, srv, ts, k, amount, profit, created_by, updated_by) VALUES (?,?,?,?,?,0,?,?,?,?,?,?,?)');
     foreach ($recs as [$kind, $id, $d]) {
         $ins->execute([$tid, $kind, $id, json_encode($d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $srv, $srv,
