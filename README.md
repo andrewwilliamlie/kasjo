@@ -22,6 +22,10 @@ Bookkeeping app for BRILink and Mini ATM agents, by PT Hausjo Digital Pro.
 | `tools/backup.php` | Nightly database backup, run by cron (command line only, blocked from the web) |
 | `tools/seed-demo.php` | Fills one toko with demo data for videos and the Play reviewer: `--phone=08…` previews, add `--replace` to write (command line only) |
 
+## First open (splash and onboarding)
+
+Signed-out visitors see a short launch splash (logo, "bagian dari HausJo"), then four swipeable slides (Transaksi agen, Laba & saldo, Kasir toko, Kasbon) with *Lewati* / *Lanjut*, ending in *Mulai gratis 30 hari* and *Sudah punya akun? Masuk*. After either button the phone remembers it (`localStorage` `kasjo-intro`), so the next sign-in goes splash → form. `?daftar` and `?masuk` skip straight to the form; signing out also goes to the form. Slide artwork: `app/onboarding/slide-1..4.webp`. Signed-in users see the same launch splash while their book loads.
+
 ## Accounts and roles
 
 Login is **WhatsApp number + 6-digit PIN**. Five wrong PINs lock that number for 15 minutes. WhatsApp OTP comes later.

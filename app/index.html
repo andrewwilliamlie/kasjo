@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&family=Poppins:wght@700&family=Roboto:wght@400;500;700&display=swap">
 <style>
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}img{max-width:100%}[hidden]{display:none!important}
@@ -215,6 +215,43 @@ tfoot td{font-weight:700}
 .onb{padding-block:28px 40px;display:flex;flex-direction:column;gap:18px}
 .onb h1{font-family:var(--f-display);font-weight:700;font-size:32px;line-height:1.05;letter-spacing:-.02em;margin:0;text-wrap:balance}
 .onb h1 b{color:var(--brand)}
+/* launch splash + onboarding slides before masuk & daftar (light design on purpose, matches the brand artwork) */
+.ls{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0b4f4c;color:#fff;font-family:"Plus Jakarta Sans",var(--f-display);overflow:hidden;text-align:center;padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px)}
+.ls::before{content:"";position:absolute;left:50%;top:50%;width:min(150vw,1100px);aspect-ratio:1;border-radius:50%;background:#0f5f5b;transform:translate(-50%,-56%)}
+.ls>*{position:relative}
+.ls .lg{width:132px;height:132px;border-radius:30px;filter:drop-shadow(0 16px 30px rgba(0,0,0,.28))}
+.ls .wm{font-weight:800;font-size:44px;letter-spacing:-.035em;line-height:1;margin-top:26px}.ls .wm b{color:#ff8a1f;font-weight:800}
+.ls .tg{margin:16px 0 0;font-size:16px;font-weight:600;color:#a9dcd5}
+.ls .dots{display:flex;gap:10px;margin-top:40px}.ls .dots i{width:9px;height:9px;border-radius:50%;background:#ff8a1f}.ls .dots i:nth-child(2){background:#ffc23d}.ls .dots i:nth-child(3){background:#5fb3aa}
+.ls .slow{max-width:22em;margin:18px 0 0;font-size:14px;color:#cfe9e5}
+.ls .by{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);left:0;right:0;font-size:13px;color:#8cc4bd;line-height:1.5}.ls .by b{display:block;font-size:18px;color:#fff;font-weight:800}
+@media (prefers-reduced-motion:no-preference){
+ .ls .lg{animation:ls-pop .7s cubic-bezier(.2,.9,.3,1.25) both}.ls .wm,.ls .tg{animation:ls-up .55s .15s ease-out both}
+ .ls .dots i{animation:ls-dot 1.1s ease-in-out infinite}.ls .dots i:nth-child(2){animation-delay:.15s}.ls .dots i:nth-child(3){animation-delay:.3s}
+}
+@keyframes ls-pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes ls-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes ls-dot{0%,100%{transform:none;opacity:1}50%{transform:translateY(-6px);opacity:.6}}
+.ob{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;background:#fff;color:#0d2b29;font-family:"Plus Jakarta Sans",var(--f-display)}
+.ob-track{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}.ob-track::-webkit-scrollbar{display:none}
+.ob-s{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;overflow-y:auto;display:flex;flex-direction:column}
+.ob-hero{position:relative;flex:none;border-radius:0 0 40px 40px;padding-top:calc(env(safe-area-inset-top,0px) + 58px);overflow:hidden}
+.ob-hero img{display:block;width:100%;max-width:480px;height:auto;max-height:46vh;object-fit:contain;object-position:center bottom;margin:0 auto}
+.ob-skip{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);right:max(12px,env(safe-area-inset-right,0px));min-height:44px;padding:0 16px;border:0;background:none;color:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer}
+.ob-txt{max-width:480px;width:100%;margin:0 auto;padding:30px max(28px,env(safe-area-inset-left,0px)) 12px}
+.ob-k{margin:0;font-size:13px;font-weight:800;letter-spacing:.2em;color:#e8731a}
+.ob-h{margin:12px 0 0;font-size:clamp(26px,7.6vw,32px);font-weight:800;line-height:1.12;letter-spacing:-.035em;text-wrap:balance}
+.ob-p{margin:12px 0 0;font-size:16px;line-height:1.55;color:#4d6462}
+.ob-ft{flex:none;max-width:480px;width:100%;margin:0 auto;padding:12px max(28px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px)}
+.ob-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ob-dots{display:flex;gap:7px}.ob-dots i{width:8px;height:8px;border-radius:99px;background:#cfe3e0;transition:width .25s,background .25s}.ob-dots i.on{width:24px;background:#0b4f4c}
+.ob-next{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 28px;border:0;border-radius:99px;background:#0b4f4c;color:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer}
+.ob-cta{display:none;flex-direction:column;gap:6px;margin-top:18px}
+.ob-go{min-height:56px;border:0;border-radius:99px;background:#ff8a1f;color:#0b2e2c;font:inherit;font-weight:800;font-size:18px;cursor:pointer;box-shadow:0 10px 22px rgba(255,138,31,.28)}
+.ob-in{min-height:48px;border:0;background:none;color:#0b4f4c;font:inherit;font-weight:800;font-size:16px;cursor:pointer}
+.ob.last .ob-next{display:none}.ob.last .ob-cta{display:flex}
+.ob button:focus-visible{outline:3px solid #ff8a1f;outline-offset:2px}
+@media (max-height:700px){.ob-hero{padding-top:calc(env(safe-area-inset-top,0px) + 48px)}.ob-hero img{max-height:40vh}.ob-txt{padding-top:20px}.ob-h{font-size:24px}.ob-p{font-size:15px}.ob-go{min-height:50px}}
 .loading{padding:60px 16px;text-align:center;color:var(--muted)}
 .confirm{background:var(--bad-soft);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;color:var(--bad);font-weight:600;font-size:14px}
 .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -272,7 +309,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.6.1';
+const APP_VERSION='1.6.2';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -401,7 +438,7 @@ const ui={
   pay:{amount:0,acct:'kas'},addMore:0,
   close:{counts:{},direct:0,mode:'count',note:''},
   fees:null,feeType:'tarik',accts:null,newBank:'',bizName:'',confirm:null,busy:false,
-  auth:{mode:'login',phone:'',pin:'',pin2:'',toko:'',name:'',err:''},
+  auth:{mode:'login',phone:'',pin:'',pin2:'',toko:'',name:'',err:'',intro:'launch',slide:0},
   pin:{current:'',next:'',next2:'',err:''},
   users:{list:null,err:'',add:{name:'',phone:'',role:'kasir'},temp:null},audit:null,wipePin:'',
   catMode:'agen',
@@ -503,14 +540,14 @@ function signedOut(msg){
   try{localStorage.removeItem('kasjo-token');localStorage.removeItem('kasjo-me')}catch(e){}
   state.token=null;state.me=null;state.role=null;state.phase='auth';state.cfg=null;state.trx=[];state.kasbon=[];state.closing=[];state.product=[];state.qris=[];
   sync.queue=[];sync.settings=null;sync.cursor=0;sync.err='';
-  ui.sheet=null;ui.auth.pin='';ui.auth.pin2='';render();if(msg)toast(msg);
+  ui.sheet=null;ui.auth.pin='';ui.auth.pin2='';ui.auth.intro=false;ui.auth.mode='login';render();if(msg)toast(msg);
 }
 function signedIn(j){
   state.token=j.token;state.me=j.me;state.role=j.me.user.role;
   try{localStorage.setItem('kasjo-token',j.token);localStorage.setItem('kasjo-me',JSON.stringify(j.me))}catch(e){}
   state.cfg=null;state.trx=[];state.kasbon=[];state.closing=[];state.product=[];state.qris=[];sync.queue=[];sync.settings=null;sync.cursor=0;
   loadCache();
-  ui.auth={mode:'login',phone:'',pin:'',pin2:'',toko:'',name:'',err:''};
+  ui.auth={mode:'login',phone:'',pin:'',pin2:'',toko:'',name:'',err:'',intro:false};
   state.phase='loading';state.slow=false;render();syncNow();
 }
 function syncChip(){
@@ -1049,13 +1086,62 @@ function screenLainnya(){
 }
 
 /* ---------- masuk & daftar ---------- */
+const OB_SLIDES=[
+  {bg:'#0b4f4c',skip:'#fff',k:'Transaksi agen',h:'Catat tarik, transfer &amp; setor sekali tap',p:'Pilih jenis transaksi, isi nominal. Fee admin terisi otomatis, saldo kas &amp; bank langsung ikut berubah.'},
+  {bg:'#12857d',skip:'#fff',k:'Laba &amp; saldo',h:'Laba harian kelihatan, uang laci tidak selisih',p:'Laba bersih, saldo tunai, bank &amp; deposit supplier dalam satu layar. Ada alarm kalau saldo menipis.'},
+  {bg:'#ff8a1f',skip:'#0b2e2c',k:'Kasir toko',h:'Sekalian jadi kasir warung kamu',p:'Scan barcode, stok berkurang sendiri, terima QRIS dan cetak struk lewat printer Bluetooth.'},
+  {bg:'#0b4f4c',skip:'',k:'Kasbon',h:'Kasbon pelanggan tertagih, tanpa sungkan',p:'Lihat siapa yang jatuh tempo, kirim pengingat sopan lewat WhatsApp sekali tap.'}];
+function screenLaunch(extra){
+  return `<div class="ls" role="img" aria-label="KasJo, kasir dan pembukuan agen">
+  <img class="lg" src="icons/icon-512.png" alt="" width="132" height="132">
+  <div class="wm">Kas<b>Jo</b></div>
+  <p class="tg">Kasir &amp; pembukuan agen</p>
+  <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+  ${extra?`<p class="slow">${extra}</p>`:''}
+  <div class="by">bagian dari<b>HausJo</b></div></div>`;
+}
+function screenSlides(){
+  const n=OB_SLIDES.length,i=Math.min(ui.auth.slide||0,n-1);
+  return `<div class="ob${i===n-1?' last':''}" id="ob">
+  <div class="ob-track" id="ob-track" aria-roledescription="carousel" aria-label="Kenalan dengan KasJo">
+  ${OB_SLIDES.map((o,k)=>`<section class="ob-s" aria-roledescription="slide" aria-label="${k+1} dari ${n}">
+    <div class="ob-hero" style="background:${o.bg}">
+      ${o.skip?`<button class="ob-skip" style="color:${o.skip}" data-act="ob-skip">Lewati</button>`:''}
+      <img src="onboarding/slide-${k+1}.webp" alt="" width="780" height="765" ${k?'loading="lazy"':''}>
+    </div>
+    <div class="ob-txt"><p class="ob-k">${o.k.toUpperCase()}</p><h2 class="ob-h">${o.h}</h2><p class="ob-p">${o.p}</p></div>
+  </section>`).join('')}
+  </div>
+  <div class="ob-ft">
+    <div class="ob-row"><div class="ob-dots" aria-hidden="true">${OB_SLIDES.map((o,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>
+    <button class="ob-next" data-act="ob-next">Lanjut <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    <div class="ob-cta"><button class="ob-go" data-act="auth-start" data-v="register">Mulai gratis 30 hari</button><button class="ob-in" data-act="auth-start" data-v="login">Sudah punya akun? Masuk</button></div>
+  </div></div>`;
+}
+function obMount(){
+  const t=$('#ob-track');if(!t)return;
+  const go=()=>{const i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));obShow(i)};
+  t.scrollLeft=(ui.auth.slide||0)*t.clientWidth;
+  let raf=0;t.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(go)},{passive:true});
+  obShow(ui.auth.slide||0);
+}
+function obShow(i){
+  const n=OB_SLIDES.length;i=Math.max(0,Math.min(n-1,i));ui.auth.slide=i;
+  const ob=$('#ob');if(!ob)return;ob.classList.toggle('last',i===n-1);
+  ob.querySelectorAll('.ob-dots i').forEach((d,k)=>d.classList.toggle('on',k===i));
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=OB_SLIDES[i].bg;
+}
+function obGo(i){const t=$('#ob-track');if(!t)return;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;t.scrollTo({left:i*t.clientWidth,behavior:reduce?'auto':'smooth'});obShow(i)}
+function introSeen(){try{return localStorage.getItem('kasjo-intro')==='1'}catch(e){return false}}
 function screenAuth(){
   const a=ui.auth,reg=a.mode==='register';
+  if(a.intro==='launch')return screenLaunch();
+  if(a.intro)return screenSlides();
   const wa=state.supportWa;
   return `<div class="wrap onb">
-  <div class="mark" style="font-size:24px">${LOGO}<span>Kas<b>Jo</b></span></div>
-  <h1>Pembukuan <b>agen BRILink</b> &amp; Mini ATM.</h1>
-  <p class="muted" style="margin:0">Catat tarik tunai, transfer dan fee otomatis. Saldo kas, saldo bank dan laba langsung kelihatan, di semua HP toko.</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div class="mark" style="font-size:24px">${LOGO}<span>Kas<b>Jo</b></span></div><button class="btn ghost" data-act="auth-intro" aria-label="Kembali ke halaman awal" style="min-height:40px;padding:0 12px">‹ Kembali</button></div>
+  <h1>${reg?'Daftar toko baru':'Masuk ke tokomu'}</h1>
+  <p class="muted" style="margin:0">${reg?'Isi data toko dan buat PIN. Uji coba gratis 30 hari, tanpa kartu kredit.':'Masuk dengan nomor WhatsApp dan PIN yang kamu daftarkan.'}</p>
   <div class="seg"><button data-act="auth-mode" data-v="login" aria-pressed="${!reg}">Masuk</button><button data-act="auth-mode" data-v="register" aria-pressed="${reg}">Daftar toko baru</button></div>
   <form class="card" style="padding:16px;display:flex;flex-direction:column;gap:14px" data-form="auth">
     ${reg?`<div class="field"><label for="a-toko">Nama usaha / konter</label><input id="a-toko" class="inp" data-text="auth.toko" value="${esc(a.toko)}" placeholder="Contoh: Agen BRILink Berkah Jaya" autocomplete="organization"></div>
@@ -1461,8 +1547,10 @@ function closeSheet(){stopScan();ui.sheet=null;ui.confirm=null;ui.fees=null;rend
 /* ---------- main render ---------- */
 function renderMain(){
   const app=$('#app');
-  if(state.phase==='loading'){app.innerHTML=`<div class="wrap loading"><div class="mark" style="justify-content:center;margin-bottom:12px">${LOGO}<span>Kas<b>Jo</b></span></div>${state.slow?'Data belum bisa dimuat. Periksa koneksi internet, halaman akan terisi otomatis begitu tersambung.':'Membuka buku…'}</div>`;return}
-  if(state.phase==='auth'){app.innerHTML=screenAuth();return}
+  const meta=document.querySelector('meta[name=theme-color]');
+  if(meta&&!(state.phase==='auth'&&ui.auth.intro==='slides'))meta.content=(state.phase==='loading'||(state.phase==='auth'&&ui.auth.intro==='launch'))?'#0b4f4c':'#0e7c73';
+  if(state.phase==='loading'){app.innerHTML=screenLaunch(state.slow?'Data belum bisa dimuat. Periksa koneksi internet, halaman akan terisi otomatis begitu tersambung.':'');return}
+  if(state.phase==='auth'){app.innerHTML=screenAuth();if(ui.auth.intro==='slides')obMount();return}
   if(state.me&&state.me.user.mustChange){app.innerHTML=screenMustChange();return}
   if(!state.cfg){app.innerHTML=can('settings')?screenOnboard():`<div class="wrap onb"><div class="mark">${LOGO}<span>Kas<b>Jo</b></span></div><h1>Toko belum siap</h1><p class="muted" style="margin:0">Pemilik toko belum menyelesaikan pengaturan awal (rekening dan modal). Minta pemilik membuka Kasjo dulu, lalu muat ulang halaman ini.</p><button class="btn ghost block" data-act="logout">Keluar</button></div>`;return}
   const r=route();
@@ -1757,6 +1845,10 @@ const handlers={
   }),
   'sync-now':()=>{sync.err='';updateSyncChip();flushSoon(0)},
   'auth-mode':(el,v)=>{ui.auth.mode=v;ui.auth.err='';renderMain()},
+  'auth-intro':()=>{ui.auth.intro='slides';ui.auth.slide=OB_SLIDES.length-1;ui.auth.err='';renderMain()},
+  'ob-next':()=>obGo((ui.auth.slide||0)+1),
+  'ob-skip':()=>obGo(OB_SLIDES.length-1),
+  'auth-start':(el,v)=>{try{localStorage.setItem('kasjo-intro','1')}catch(e){}ui.auth.intro=false;ui.auth.mode=v;ui.auth.err='';renderMain();const f=$(v==='register'?'#a-toko':'#a-phone');if(f)f.focus()},
   logout:()=>guard(async()=>{
     const n=pendingCount();
     if(n&&ui.confirm!=='logout'){ui.confirm='logout';toast(n+' perubahan belum terkirim. Ketuk Keluar sekali lagi untuk tetap keluar.');return}
@@ -1999,14 +2091,17 @@ window.addEventListener('hashchange',()=>{closeSheet();renderMain();window.scrol
 render();
 let slowT=setTimeout(()=>{if(state.phase==='loading'){state.slow=true;renderMain()}},10000);
 function ready(){if(state.phase!=='ready'){state.phase='ready';clearTimeout(slowT);if(ui.form.feeAuto)ui.form.fee=feeFor(ui.form.type,ui.form.amount)}render()}
-api('config').then(c=>{state.supportWa=c.supportWa||'';if(state.phase==='auth')renderMain()}).catch(()=>{});
+api('config').then(c=>{state.supportWa=c.supportWa||'';if(state.phase==='auth'&&!ui.auth.intro)renderMain()}).catch(()=>{});
 (function(){
   try{state.token=localStorage.getItem('kasjo-token');state.me=JSON.parse(localStorage.getItem('kasjo-me')||'null')}catch(e){}
   try{if(localStorage.getItem('kasjo-catmode')==='toko')ui.catMode='toko'}catch(e){}
   {const m=new URLSearchParams(location.search).get('mode');if(m==='agen'||m==='toko'){ui.catMode=m;try{localStorage.setItem('kasjo-catmode',m)}catch(e){}}}
   {const m=location.search.match(/[?&]mode=(agen|toko)/);if(m){ui.catMode=m[1];try{localStorage.setItem('kasjo-catmode',m[1])}catch(e){}}}
-  if(/[?&]daftar/.test(location.search))ui.auth.mode='register';
-  if(!state.token){state.phase='auth';render();return}
+  if(/[?&]daftar/.test(location.search)){ui.auth.mode='register';ui.auth.intro=false}
+  if(/[?&]masuk/.test(location.search))ui.auth.intro=false;
+  if(!state.token){state.phase='auth';render();
+    if(ui.auth.intro==='launch')setTimeout(()=>{if(state.phase==='auth'&&ui.auth.intro==='launch'){ui.auth.intro=introSeen()?false:'slides';renderMain()}},1400);
+    return}
   if(state.me){state.role=state.me.user.role;if(loadCache())ready()}
   syncNow();
 })();
