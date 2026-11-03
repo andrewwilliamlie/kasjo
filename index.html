@@ -82,6 +82,17 @@ header.nav nav a.btn{color:#fff;padding:9px 14px}
 .phone .row b{font-variant-numeric:tabular-nums}.phone .row .p{color:#0e9b8b;font-size:11px;display:block;text-align:right}
 .phone .ex{text-align:center;font-size:10.5px;color:var(--muted);margin-top:8px}
 
+.video{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:36px;align-items:center}
+.yt{position:relative;display:block;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:var(--deep);box-shadow:0 18px 40px -18px rgb(11 86 84 / .45);border:0;padding:0;cursor:pointer}
+.yt img{color:transparent}
+.yt img,.yt iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0;display:block}
+.yt .play{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:var(--orange);display:grid;place-items:center;box-shadow:0 8px 24px rgb(0 0 0 / .35);transition:transform .15s ease}
+.yt:hover .play,.yt:focus-visible .play{transform:scale(1.08)}
+.yt .play svg{width:30px;height:30px;margin-left:5px;fill:#fff}
+.video ul{list-style:none;margin:18px 0 22px;padding:0;display:grid;gap:10px}
+.video li{display:flex;gap:10px;align-items:flex-start;color:var(--ink)}
+.video li::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--orange);margin-top:8px}
+@media (max-width:860px){.video{grid-template-columns:1fr;gap:24px}}
 section{padding-block:72px}
 section.soft{background:var(--soft)}
 .sec-head{max-width:640px;margin-bottom:36px}
@@ -139,7 +150,7 @@ footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;
 <body>
 <header class="nav"><div class="wrap">
   <a class="mark" href="/" aria-label="Kasjo beranda"><img src="app/icons/icon-192.png?v=2" alt="" width="34" height="34"><span>Kas<b>Jo</b></span></a>
-  <nav aria-label="Menu"><a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#harga">Harga</a><a href="#faq">FAQ</a><a href="https://app.kasjo.site/">Masuk</a><a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis</a></nav>
+  <nav aria-label="Menu"><a href="#fitur">Fitur</a><a href="#cara">Cara kerja</a><a href="#tutorial">Tutorial</a><a href="#harga">Harga</a><a href="#faq">FAQ</a><a href="https://app.kasjo.site/">Masuk</a><a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis</a></nav>
 </div></header>
 
 <main>
@@ -194,7 +205,28 @@ footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;
   </div>
 </section>
 
-<section>
+<section id="tutorial">
+  <div class="wrap video">
+    <a class="yt" id="yt-tutorial" href="https://youtu.be/p__358VnwNo" target="_blank" rel="noopener" data-id="p__358VnwNo" aria-label="Putar video tutorial Kasjo">
+      <img src="https://i.ytimg.com/vi/p__358VnwNo/maxresdefault.jpg" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/p__358VnwNo/hqdefault.jpg'" alt="Video tutorial cara memakai Kasjo" loading="lazy" width="1280" height="720">
+      <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg></span>
+    </a>
+    <div>
+      <div class="sec-head" style="margin-bottom:0"><span class="k">Video tutorial</span><h2>Lihat cara pakai Kasjo</h2><p>Panduan lengkap dari daftar sampai tutup kasir, cocok untuk pemilik dan kasir yang baru mulai.</p></div>
+      <ul>
+        <li>Daftar dan mengatur rekening serta modal awal</li>
+        <li>Mencatat tarik tunai, transfer dan setor tunai</li>
+        <li>Kasir toko, kasbon dan laporan laba</li>
+      </ul>
+      <a class="btn pri" href="https://app.kasjo.site/?daftar">Coba gratis 30 hari</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){var a=document.getElementById('yt-tutorial');if(!a)return;a.addEventListener('click',function(e){e.preventDefault();var f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+a.dataset.id+'?autoplay=1&rel=0&modestbranding=1';f.title='Video tutorial Kasjo';f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';f.allowFullscreen=true;var d=document.createElement('div');d.className='yt';d.appendChild(f);a.replaceWith(d);});})();
+</script>
+
+<section class="soft">
   <div class="wrap">
     <div class="sec-head"><span class="k">Bandingkan</span><h2>Kasjo vs buku tulis</h2><p>Pembukuan agen dengan buku tulis atau Excel gampang salah hitung dan susah dicek ulang.</p></div>
     <div class="compare"><table>
