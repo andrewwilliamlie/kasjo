@@ -1,6 +1,7 @@
 # Builds the Kasjo EDC app (android-edc/) for PAX terminals. The APKs appear under the run's "Artifacts".
 # Secrets (Settings -> Secrets and variables -> Actions):
-#   PAX_SDK_JAR_B64            base64 of the PAX NeptuneLite jar (without it the APK is built with no printer)
+#   PAX_SDK_PASSPHRASE         password for android-edc/pax-sdk/*.jar.gpg, the encrypted PAX NeptuneLite jar
+#                              (without it the APK is built with no printer)
 #   KASJO_EDC_KEYSTORE_B64     base64 of the Kasjo EDC release keystore (optional; release APK only when set)
 #   KASJO_EDC_KEYSTORE_PASSWORD, KASJO_EDC_KEY_ALIAS, KASJO_EDC_KEY_PASSWORD
 name: Kasjo EDC app
@@ -31,13 +32,16 @@ jobs:
 
       - name: PAX SDK
         env:
-          PAX_SDK_JAR_B64: ${{ secrets.PAX_SDK_JAR_B64 }}
+          PAX_SDK_PASSPHRASE: ${{ secrets.PAX_SDK_PASSPHRASE }}
         run: |
-          if [ -n "$PAX_SDK_JAR_B64" ]; then
-            echo "$PAX_SDK_JAR_B64" | base64 -d > app/libs/NeptuneLiteApi.jar
-            echo "PAX SDK jar added ($(stat -c %s app/libs/NeptuneLiteApi.jar) bytes)"
+          if [ -n "$PAX_SDK_PASSPHRASE" ]; then
+            for f in pax-sdk/*.jar.gpg; do
+              out="app/libs/$(basename "$f" .gpg)"
+              echo "$PAX_SDK_PASSPHRASE" | gpg --batch --quiet --passphrase-fd 0 -o "$out" -d "$f"
+              echo "PAX SDK: $(basename "$out") ($(stat -c %s "$out") bytes)"
+            done
           else
-            echo "::warning::PAX_SDK_JAR_B64 is not set: building without the built-in printer"
+            echo "::warning::PAX_SDK_PASSPHRASE is not set: building without the built-in printer"
           fi
 
       - name: Release keystore

@@ -29,7 +29,7 @@ In the web app (`app/index.html`): `IN_EDC` is true inside this app (`window.Kas
 GitHub Actions (`.github/workflows/android-edc.yml`) builds on every push that touches `android-edc/`, or by hand under Actions → Kasjo EDC app → Run workflow. Download the APK from the run's Artifacts.
 
 Repository secrets:
-- `PAX_SDK_JAR_B64` – the NeptuneLite jar as base64 (`base64 -w0 NeptuneLiteApi_V4.05.00.jar`). The repo is public, so the jar itself is never committed.
+- `PAX_SDK_PASSPHRASE` – password of `pax-sdk/NeptuneLiteApi_V4.05.00_20240305.jar.gpg`. The repo is public and the SDK is licensed to HausJo, so only the encrypted jar is committed (GitHub secrets are too small to hold the jar). To replace the SDK: `gpg --symmetric --cipher-algo AES256 NeptuneLiteApi_….jar`, put the `.gpg` file in `pax-sdk/` (delete the old one), keep or update the secret.
 - Release signing (optional, for PAXSTORE uploads): `KASJO_EDC_KEYSTORE_B64`, `KASJO_EDC_KEYSTORE_PASSWORD`, `KASJO_EDC_KEY_ALIAS`, `KASJO_EDC_KEY_PASSWORD`. Use a Kasjo EDC keystore, separate from the Play and AIPOS keystores; never commit it.
 
 On your own computer: Android Studio → open `android-edc/`, put the jar in `app/libs/`, Run.
