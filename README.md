@@ -101,6 +101,14 @@ Catat → **Penjualan toko** (switch at the top; the choice is remembered per ph
 - **Expired** toko is view-only: login, reports, kasbon and CSV still work; `push` answers 402 `expired`. Anything recorded on a phone at that moment stays in its queue and is sent automatically after renewal. Banners warn 5 days before the end.
 - New tables (`payments`, `app_settings`) are created automatically on the first request after deploy (`migrate()` with a `.kasjo-schema` marker next to the config file).
 
+### Renewal for Play Store users
+
+The Play Store app may not show prices or payment (Google Play payments policy), so renewals are pushed from outside the app:
+
+- `admin.php` → **Segera berakhir**: tokos whose trial / subscription ends within 7 days or ended in the last 30 days, with owner, status and when they were last reminded. *Kirim pengingat WhatsApp* opens a chat with the owner, message pre-filled (stored as `app_settings` `reminded`).
+- The message links to **kasjo.site/perpanjang** (`perpanjang.html`). On Android its button opens `app.kasjo.site/?bayar` explicitly in Chrome, so the Play app does not capture the link. Without Chrome, the page tells the owner to type `app.kasjo.site/?bayar`.
+- `?bayar` skips the intro and opens Langganan after the owner signs in (browser only; ignored in the Play app).
+
 ## Alerts
 
 - **Saldo minimum** (Lainnya → Peringatan saldo, owner/manager): a minimum per account (`min` on each account in `toko.settings`, shared by every phone). Beranda shows a red *Saldo menipis* card and highlights the account; a toast warns right after a transaction, sale or mutasi that pushes an account under its minimum.

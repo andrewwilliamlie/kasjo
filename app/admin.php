@@ -6,7 +6,7 @@ require __DIR__ . '/api/_lib.php';
 ini_set('display_errors', '0');
 header('Cache-Control: no-store');
 header('X-Frame-Options: DENY');
-header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'");
+header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self' https://wa.me https://api.whatsapp.com");
 
 if (!installed()) { http_response_code(503); exit('Belum dipasang. Buka install.php.'); }
 migrate();
@@ -17,7 +17,7 @@ session_start();
 $msg = ''; $err = ''; $temp = null;
 $post = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
 $csrfOk = $post && hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['csrf'] ?? ''));
-$tab = in_array($_GET['tab'] ?? '', ['bayar', 'toko', 'atur'], true) ? $_GET['tab'] : 'bayar';
+$tab = in_array($_GET['tab'] ?? '', ['bayar', 'habis', 'toko', 'atur'], true) ? $_GET['tab'] : 'bayar';
 
 if (isset($_GET['logout'])) { $_SESSION = []; session_destroy(); header('Location: admin.php'); exit; }
 
@@ -36,7 +36,16 @@ if (empty($_SESSION['admin'])) {
     if ($post && !$csrfOk) $err = 'Sesi formulir kedaluwarsa. Muat ulang halaman.';
     elseif ($post) {
         $do = (string)($_POST['do'] ?? ''); $id = (int)($_POST['id'] ?? 0); $note = trim((string)($_POST['note'] ?? ''));
-        if ($do === 'approve') {
+        if ($do === 'remind') {
+            // Reminder goes out by WhatsApp from support's phone, outside the Play app: record it, then open the chat.
+            $t = load_toko_row($id);
+            $st = db()->prepare("SELECT name, phone FROM users WHERE toko_id = ? AND role = 'owner' AND disabled = 0 ORDER BY id LIMIT 1"); $st->execute([$id]); $o = $st->fetch();
+            if ($t && $o) {
+                $r = json_decode((string)app_setting('reminded'), true) ?: []; $r[(string)$id] = now_ms(); set_app_setting('reminded', json_encode($r));
+                header('Location: https://wa.me/' . preg_replace('/\D/', '', (string)$o['phone']) . '?text=' . rawurlencode(renew_text($t, (string)$o['name'])), true, 303); exit;
+            }
+            $err = 'Toko atau pemilik tidak ditemukan.'; $tab = 'habis';
+        } elseif ($do === 'approve') {
             $r = approve_payment($id, $note);
             $msg = $r ? 'Pembayaran dikonfirmasi. Toko aktif s/d ' . date('d M Y', intdiv($r['until'], 1000)) . '.' : '';
             if (!$r) $err = 'Pembayaran tidak ditemukan atau sudah diproses.';
@@ -105,6 +114,15 @@ if (empty($_SESSION['admin'])) {
         }
     }
 }
+function renew_text(array $t, string $owner): string {
+    $s = toko_status($t); $d = date('d M Y', intdiv($s['until'], 1000));
+    $what = $s['status'] === 'trial' ? 'Masa uji coba gratis' : 'Langganan';
+    $when = $s['active'] ? ($s['daysLeft'] <= 1 ? "berakhir besok, $d" : "berakhir dalam {$s['daysLeft']} hari ($d)") : "sudah berakhir sejak $d. Data tetap aman dan bisa dilihat, tapi transaksi baru belum bisa dicatat";
+    $first = trim(explode(' ', trim($owner))[0] ?? '');
+    return "Halo" . ($first !== '' ? " $first" : '') . ", ini support Kasjo.\n\n$what Kasjo untuk toko *{$t['name']}* $when.\n\n"
+        . "Perpanjang di sini (bayar QRIS, aktif setelah dicek admin):\nhttps://kasjo.site/perpanjang\n\n"
+        . "Paket: Rp 29.000/1 bulan · Rp 79.000/3 bulan · Rp 249.000/1 tahun.\nAda pertanyaan? Balas pesan ini ya. Terima kasih 🙏";
+}
 $q = trim((string)($_GET['q'] ?? ''));
 $fmt = fn($ms) => $ms ? date('d M Y H:i', (int)($ms / 1000)) : '-';
 $fmtD = fn($ms) => $ms ? date('d M Y', (int)($ms / 1000)) : '-';
@@ -142,6 +160,9 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
     $c = function (string $sql, array $a = []): int { $s = db()->prepare($sql); $s->execute($a); return (int)$s->fetchColumn(); };
     $now = now_ms(); $monthStart = (int)(strtotime(date('Y-m-01 00:00:00')) * 1000);
     $waiting = $c("SELECT COUNT(*) FROM payments WHERE status = 'review'");
+    $endSql = "FROM toko t WHERE t.disabled = 0 AND t.name <> '(akun dihapus)' AND (CASE WHEN t.paid_until > t.trial_until THEN t.paid_until ELSE t.trial_until END) BETWEEN " . (int)($now - 30 * 86400000) . ' AND ' . (int)($now + 7 * 86400000);
+    $endArgs = [];
+    $ending = $c("SELECT COUNT(*) $endSql", $endArgs);
     $stats = [
         'Toko' => number_format($c('SELECT COUNT(*) FROM toko'), 0, ',', '.'),
         'Berlangganan aktif' => number_format($c('SELECT COUNT(*) FROM toko WHERE paid_until > ?', [$now]), 0, ',', '.'),
@@ -164,7 +185,7 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
   <?php if ($temp): ?><div class="temp">PIN sementara untuk <b><?= h($temp['who']) ?></b>:<br><code><?= h($temp['pin']) ?></code><br>
     Kirim lewat WhatsApp ke nomor yang terdaftar. Pengguna wajib menggantinya saat masuk. PIN ini hanya tampil sekali.</div><?php endif; ?>
   <section class="stats"><?php foreach ($stats as $k => $n): ?><div><b><?= h((string)$n) ?></b><small><?= h($k) ?></small></div><?php endforeach; ?></section>
-  <nav class="tabs"><a href="?tab=bayar" class="<?= $tab === 'bayar' ? 'on' : '' ?>">Pembayaran<?= $waiting ? ' (' . $waiting . ')' : '' ?></a><a href="?tab=toko" class="<?= $tab === 'toko' ? 'on' : '' ?>">Toko &amp; pengguna</a><a href="?tab=atur" class="<?= $tab === 'atur' ? 'on' : '' ?>">QRIS pembayaran</a></nav>
+  <nav class="tabs"><a href="?tab=bayar" class="<?= $tab === 'bayar' ? 'on' : '' ?>">Pembayaran<?= $waiting ? ' (' . $waiting . ')' : '' ?></a><a href="?tab=habis" class="<?= $tab === 'habis' ? 'on' : '' ?>">Segera berakhir<?= $ending ? ' (' . $ending . ')' : '' ?></a><a href="?tab=toko" class="<?= $tab === 'toko' ? 'on' : '' ?>">Toko &amp; pengguna</a><a href="?tab=atur" class="<?= $tab === 'atur' ? 'on' : '' ?>">QRIS pembayaran</a></nav>
 
 <?php if ($tab === 'bayar'):
     $st = db()->query("SELECT p.*, t.name AS toko_name, t.trial_until, t.paid_until, (SELECT phone FROM users u WHERE u.toko_id = p.toko_id AND u.role = 'owner' LIMIT 1) AS owner_phone FROM payments p JOIN toko t ON t.id = p.toko_id WHERE p.status IN ('review','pending') ORDER BY CASE p.status WHEN 'review' THEN 0 ELSE 1 END, p.created_at");
@@ -192,6 +213,25 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
     <?php foreach ($hist as $p): ?><tr><td><?= h($fmt($p['decided_at'])) ?></td><td><?= h($p['toko_name']) ?></td><td><?= h(PLANS[$p['plan']]['label'] ?? ($p['plan'] === 'manual' ? 'Manual ' . (int)$p['days'] . ' hari' : $p['plan'])) ?></td><td><?= h(rupiah($p['amount'])) ?></td>
       <td><?= $p['status'] === 'approved' ? '<span class="pill">Lunas</span>' : '<span class="pill off">Ditolak</span>' ?><?= $p['note'] ? '<br><small>' . h($p['note']) . '</small>' : '' ?></td></tr><?php endforeach; if (!$hist): ?><tr><td colspan="5">Belum ada.</td></tr><?php endif; ?>
   </tbody></table></div></section>
+
+<?php elseif ($tab === 'habis'):
+    $st = db()->prepare("SELECT t.*, (SELECT name FROM users u WHERE u.toko_id = t.id AND u.role = 'owner' AND u.disabled = 0 ORDER BY u.id LIMIT 1) AS owner_name, (SELECT phone FROM users u WHERE u.toko_id = t.id AND u.role = 'owner' AND u.disabled = 0 ORDER BY u.id LIMIT 1) AS owner_phone,
+        (SELECT COUNT(*) FROM payments p WHERE p.toko_id = t.id AND p.status IN ('pending','review')) AS open_bills $endSql ORDER BY (CASE WHEN paid_until > trial_until THEN paid_until ELSE trial_until END)");
+    $st->execute($endArgs); $rows = $st->fetchAll();
+    $rem = json_decode((string)app_setting('reminded'), true) ?: []; ?>
+  <section class="card"><h2 style="margin-top:0">Segera berakhir</h2>
+    <p style="color:var(--muted);font-size:13px;margin:4px 0 0">Toko yang uji coba / langganannya habis dalam 7 hari, atau sudah habis dalam 30 hari terakhir. Pengguna aplikasi Play Store tidak melihat cara bayar di aplikasi (aturan Google Play), jadi kirim pengingat lewat WhatsApp. Link di pesan (kasjo.site/perpanjang) membuka halaman bayar di Chrome. WhatsApp terbuka di tab baru; muat ulang halaman ini untuk melihat waktu pengingat.</p>
+    <div class="scroll"><table><thead><tr><th>Toko</th><th>Pemilik</th><th>Status</th><th>Pengingat</th><th></th></tr></thead><tbody>
+    <?php foreach ($rows as $t): $s = toko_status($t); $last = (int)($rem[(string)$t['id']] ?? 0); ?>
+      <tr><td><b><?= h($t['name']) ?></b><?= $t['open_bills'] ? '<br><span class="pill warn">Ada tagihan terbuka</span>' : '' ?></td>
+        <td><?= h($t['owner_name'] ?? '-') ?><br><small><?= h($t['owner_phone'] ?? '-') ?></small></td>
+        <td><?= $statusPill($t) ?><br><small><?= $s['active'] ? 'sisa ' . (int)$s['daysLeft'] . ' hari' : 'lewat ' . (int)floor(($now - $s['until']) / 86400000) . ' hari' ?></small></td>
+        <td><?= $last ? h($fmt($last)) : '<span style="color:var(--muted)">Belum</span>' ?></td>
+        <td><?php if (!empty($t['owner_phone'])): ?><form method="post" target="_blank"><?= $hidden($t['id'], 'remind') ?><button type="submit"><?= $last ? 'Kirim lagi' : 'Kirim pengingat WhatsApp' ?></button></form><?php endif; ?></td></tr>
+    <?php endforeach; if (!$rows): ?><tr><td colspan="5">Tidak ada toko yang segera berakhir.</td></tr><?php endif; ?>
+    </tbody></table></div>
+    <details style="margin-top:12px"><summary>Contoh pesan</summary><pre style="white-space:pre-wrap;font:inherit;font-size:13px;background:#f4f8f7;padding:12px;border-radius:10px"><?= h(renew_text(['name' => 'Agen Berkah Jaya', 'trial_until' => $now + 3 * 86400000, 'paid_until' => 0], 'Sari Wulandari')) ?></pre></details>
+  </section>
 
 <?php elseif ($tab === 'atur'): $qr = app_setting('pay_qris'); ?>
   <section class="card"><h2 style="margin-top:0">QRIS pembayaran langganan</h2>

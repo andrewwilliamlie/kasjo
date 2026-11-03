@@ -309,7 +309,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.7.0';
+const APP_VERSION='1.7.1';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -364,6 +364,7 @@ const banks=()=>(state.cfg?state.cfg.accounts.filter(a=>a.kind==='bank'):[]);
 // Kasjo EDC: our own Android app for PAX terminals, with a JavaScript bridge to the built-in printer.
 const EDC=window.KasjoEDC||null;
 const IN_EDC=(()=>{let f=!!EDC;try{f=f||new URLSearchParams(location.search).get('src')==='pax'||sessionStorage.getItem('kasjo-edc')==='1';if(f)sessionStorage.setItem('kasjo-edc','1')}catch(e){}return f})();
+const WANT_BILL=/[?&]bayar(?:[=&]|$)/.test(location.search);let billAsked=false;
 const IN_PLAY=!IN_EDC&&(()=>{let f=false;try{f=new URLSearchParams(location.search).get('src')==='twa'||String(document.referrer).startsWith('android-app://')||sessionStorage.getItem('kasjo-twa')==='1';if(f)sessionStorage.setItem('kasjo-twa','1')}catch(e){}return f})();
 const MAX_USERS=3;
 const tokoInfo=()=>(state.me&&state.me.toko)||{};
@@ -1577,7 +1578,7 @@ function renderWithFocus(fn){
   fn();
   if(id){const n=document.getElementById(id);if(n&&n!==document.activeElement){n.focus({preventScroll:true});try{if(ss!=null)n.setSelectionRange(ss,se)}catch(e){}}}
 }
-function render(){renderWithFocus(()=>{renderMain();renderSheet()})}
+function render(){renderWithFocus(()=>{renderMain();renderSheet()});if(WANT_BILL&&!billAsked)maybeOpenBill()}
 
 /* ---------- toast ---------- */
 let toastT;
@@ -2106,6 +2107,8 @@ window.addEventListener('hashchange',()=>{closeSheet();renderMain();window.scrol
 render();
 let slowT=setTimeout(()=>{if(state.phase==='loading'){state.slow=true;renderMain()}},10000);
 function ready(){if(state.phase!=='ready'){state.phase='ready';clearTimeout(slowT);if(ui.form.feeAuto)ui.form.fee=feeFor(ui.form.type,ui.form.amount)}render()}
+// ?bayar (link from kasjo.site/perpanjang): open Langganan once the owner's book is ready, in the browser only
+function maybeOpenBill(){if(WANT_BILL&&!billAsked&&!IN_PLAY&&state.phase==='ready'&&state.cfg&&state.role==='owner'&&!(state.me&&state.me.user.mustChange)&&!ui.sheet){billAsked=true;ui.bill=null;setTimeout(()=>{openSheet('billing');loadBilling()},0)}}
 api('config').then(c=>{state.supportWa=c.supportWa||'';if(state.phase==='auth'&&!ui.auth.intro)renderMain()}).catch(()=>{});
 (function(){
   try{state.token=localStorage.getItem('kasjo-token');state.me=JSON.parse(localStorage.getItem('kasjo-me')||'null')}catch(e){}
@@ -2113,7 +2116,7 @@ api('config').then(c=>{state.supportWa=c.supportWa||'';if(state.phase==='auth'&&
   {const m=new URLSearchParams(location.search).get('mode');if(m==='agen'||m==='toko'){ui.catMode=m;try{localStorage.setItem('kasjo-catmode',m)}catch(e){}}}
   {const m=location.search.match(/[?&]mode=(agen|toko)/);if(m){ui.catMode=m[1];try{localStorage.setItem('kasjo-catmode',m[1])}catch(e){}}}
   if(/[?&]daftar/.test(location.search)){ui.auth.mode='register';ui.auth.intro=false}
-  if(/[?&]masuk/.test(location.search))ui.auth.intro=false;
+  if(/[?&](masuk|bayar)/.test(location.search))ui.auth.intro=false;
   if(!state.token){state.phase='auth';render();
     if(ui.auth.intro==='launch')setTimeout(()=>{if(state.phase==='auth'&&ui.auth.intro==='launch'){ui.auth.intro=introSeen()?false:'slides';renderMain()}},1400);
     return}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Perpanjang Langganan · Kasjo</title>
+<meta name="description" content="Cara memperpanjang langganan Kasjo: bayar dengan QRIS di app.kasjo.site lewat Chrome.">
+<link rel="canonical" href="https://kasjo.site/perpanjang">
+<link rel="icon" type="image/png" href="app/icons/favicon-64.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+:root{--teal:#0e7c73;--deep:#0b5654;--orange:#f6822a;--ink:#1d2a29;--muted:#5f706e;--line:#e1e9e8;--soft:#f1f8f7}
+*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--ink);font:16px/1.7 Roboto,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{border-bottom:1px solid var(--line)}header .w{display:flex;align-items:center;gap:10px;padding-block:14px}
+.w{max-width:760px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.mark{display:flex;align-items:center;gap:9px;font-family:Poppins,Roboto,sans-serif;font-weight:700;font-size:20px;color:var(--deep);text-decoration:none}.mark b{color:var(--orange)}.mark img{width:30px;height:30px}
+main{padding-block:32px 60px}h1{font-family:Poppins,Roboto,sans-serif;font-size:30px;line-height:1.2;margin:0 0 10px}
+h2{font-family:Poppins,Roboto,sans-serif;font-size:19px;margin:30px 0 6px;color:var(--deep)}a{color:var(--teal)}
+ol li,ul li{margin:4px 0}.box{background:var(--soft);border-radius:14px;padding:16px 18px;margin:16px 0}
+.btn{display:inline-flex;align-items:center;gap:8px;background:#1f9d55;color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:12px 18px;margin-top:6px}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;padding-block:22px}
+.btn.big{font-size:17px;padding:15px 22px;background:var(--teal);width:100%;justify-content:center}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.plans div{border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}.plans b{display:block;font-size:18px;color:var(--deep)}.plans small{color:var(--muted)}
+code{background:var(--soft);padding:2px 6px;border-radius:6px;font-size:15px;user-select:all}
+@media (max-width:420px){.plans{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="w"><a class="mark" href="/"><img src="app/icons/icon-192.png" alt="" width="30" height="30"><span>Kas<b>Jo</b></span></a></div></header>
+<main class="w">
+<h1>Perpanjang langganan Kasjo</h1>
+<p>Langganan dibayar lewat <b>browser Chrome</b> di app.kasjo.site, dengan QRIS. Setelah dicek admin, langganan langsung aktif di semua HP toko, termasuk aplikasi Kasjo dari Play Store.</p>
+<a class="btn big" id="go" href="https://app.kasjo.site/?bayar">Buka halaman bayar di Chrome</a>
+<p style="color:var(--muted);font-size:14px;margin-top:10px">Kalau tombol malah membuka aplikasi Kasjo: buka <b>Chrome</b>, lalu ketik <code>app.kasjo.site/?bayar</code> di kolom alamat.</p>
+
+<h2>Langkahnya</h2>
+<ol>
+<li>Ketuk tombol di atas. Chrome membuka Kasjo.</li>
+<li>Masuk dengan <b>nomor WhatsApp dan PIN pemilik toko</b> (kalau belum masuk).</li>
+<li>Halaman <b>Langganan</b> terbuka. Pilih paket, scan QRIS dengan m-banking atau e-wallet, lalu bayar <b>tepat sesuai nominal</b> yang tampil (sudah termasuk kode unik).</li>
+<li>Unggah bukti bayar, atau ketuk <b>Konfirmasi ke Admin via WhatsApp</b>.</li>
+<li>Admin mengecek pembayaran dan mengaktifkan langganan. Buka lagi aplikasi Kasjo, masa aktif sudah bertambah.</li>
+</ol>
+
+<h2>Paket</h2>
+<div class="plans"><div><b>Rp 29.000</b><small>1 bulan</small></div><div><b>Rp 79.000</b><small>3 bulan</small></div><div><b>Rp 249.000</b><small>1 tahun</small></div></div>
+<p style="color:var(--muted);font-size:14px">Semua fitur, 1 toko, hingga 3 pengguna. Bayar lebih awal tidak rugi: hari baru ditambahkan setelah masa aktif sekarang habis.</p>
+
+<h2>Butuh bantuan?</h2>
+<p>Hubungi support Kasjo di WhatsApp <a href="https://wa.me/6288296197907?text=Halo%20support%20Kasjo%2C%20saya%20mau%20perpanjang%20langganan.">+62 882-9619-7907</a>.</p>
+</main>
+<footer><div class="w">© 2026 PT Hausjo Digital Pro · <a href="/">kasjo.site</a> · <a href="privasi.html">Kebijakan privasi</a></div></footer>
+<script>
+// Android: open the page in Chrome itself, so it is not captured by the Play Store app (which hides payment).
+if(/Android/i.test(navigator.userAgent)){document.getElementById('go').href='intent://app.kasjo.site/?bayar#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent('https://app.kasjo.site/?bayar')+';end'}
+</script>
+</body>
+</html>

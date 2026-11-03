@@ -11,6 +11,10 @@ RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 RewriteCond %{HTTP_HOST} ^kasjo\.site$ [NC]
 RewriteRule ^app/(.*)$ https://app.kasjo.site/$1 [L,R=301]
 
+# kasjo.site/perpanjang -> renewal instructions page (link sent in WhatsApp reminders)
+RewriteCond %{HTTP_HOST} ^kasjo\.site$ [NC]
+RewriteRule ^perpanjang/?$ perpanjang.html [L]
+
 DirectoryIndex index.html
 Options -Indexes
 Header always set X-Content-Type-Options "nosniff"
