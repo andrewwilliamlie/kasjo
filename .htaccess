@@ -22,4 +22,4 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
 # Hide repository internals and notes (the site is deployed from Git)
 RedirectMatch 404 /\.git
 RedirectMatch 404 /(README|CLAUDE)\.md$
-RedirectMatch 404 ^/(tools|docs)(/|$)
+RedirectMatch 404 ^/(tools|docs|android-edc)(/|$)

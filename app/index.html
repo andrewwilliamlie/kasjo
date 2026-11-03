@@ -309,7 +309,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.6.2';
+const APP_VERSION='1.7.0';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -361,7 +361,10 @@ const banks=()=>(state.cfg?state.cfg.accounts.filter(a=>a.kind==='bank'):[]);
 // Opened from the Google Play app (Trusted Web Activity): the Play launch URL carries ?src=twa and Chrome sets an
 // android-app:// referrer. Kept per session only, because the Play app shares storage with Chrome on the same phone.
 // Google Play's Payments policy: no subscription purchase or pointer to one inside the Play app, status only.
-const IN_PLAY=(()=>{let f=false;try{f=new URLSearchParams(location.search).get('src')==='twa'||String(document.referrer).startsWith('android-app://')||sessionStorage.getItem('kasjo-twa')==='1';if(f)sessionStorage.setItem('kasjo-twa','1')}catch(e){}return f})();
+// Kasjo EDC: our own Android app for PAX terminals, with a JavaScript bridge to the built-in printer.
+const EDC=window.KasjoEDC||null;
+const IN_EDC=(()=>{let f=!!EDC;try{f=f||new URLSearchParams(location.search).get('src')==='pax'||sessionStorage.getItem('kasjo-edc')==='1';if(f)sessionStorage.setItem('kasjo-edc','1')}catch(e){}return f})();
+const IN_PLAY=!IN_EDC&&(()=>{let f=false;try{f=new URLSearchParams(location.search).get('src')==='twa'||String(document.referrer).startsWith('android-app://')||sessionStorage.getItem('kasjo-twa')==='1';if(f)sessionStorage.setItem('kasjo-twa','1')}catch(e){}return f})();
 const MAX_USERS=3;
 const tokoInfo=()=>(state.me&&state.me.toko)||{};
 const isExpired=()=>tokoInfo().active===false;
@@ -1068,7 +1071,7 @@ function screenLainnya(){
   ${can('settings')?item('products','Produk & stok',state.product.length?fmt(state.product.length)+' produk'+(lowStock().length?' · '+lowStock().length+' stok menipis':''):'Daftar barang, pulsa dan token yang dijual'):''}
   ${can('settings')?item('minbal','Peringatan saldo',(()=>{const n=state.cfg.accounts.filter(a=>a.min>0).length,l=lowBalances().length;return n?n+' rekening diberi batas'+(l?' · '+l+' di bawah batas':''):'Ingatkan saat kas, bank atau deposit menipis'})()):''}
   ${can('settings')?item('fees','Atur fee admin','Tabel fee per jenis transaksi dan nominal'):''}
-  ${item('printer','Printer struk',(()=>{const P=prnCfg();return P.mode==='rawbt'?'Lewat aplikasi RawBT':(PRN.char?'Tersambung: '+esc(PRN.dev.name||'Printer'):P.name?'Bluetooth: '+esc(P.name):'Sambungkan printer Bluetooth thermal')})())}
+  ${item('printer','Printer struk',(()=>{const P=prnCfg();return P.mode==='edc'?'Printer bawaan EDC':P.mode==='rawbt'?'Lewat aplikasi RawBT':(PRN.char?'Tersambung: '+esc(PRN.dev.name||'Printer'):P.name?'Bluetooth: '+esc(P.name):'Sambungkan printer Bluetooth thermal')})())}
   ${item('poster','Cetak tabel fee','Poster biaya admin untuk dipasang di toko (PNG / PDF A4)')}
   ${can('settings')?item('accounts','Rekening & EDC',banks().map(a=>a.name).join(', ')||'Belum ada'):''}
   ${can('settings')?item('profile','Profil usaha',esc(state.cfg.name)):''}
@@ -1081,7 +1084,7 @@ function screenLainnya(){
   ${can('users')?item('users','Pengguna & kasir','Tambah kasir, atur peran, reset PIN'):''}
   ${can('audit')?item('audit','Riwayat aktivitas','Siapa mencatat, mengubah atau menghapus apa'):''}
   <button class="r" data-act="logout"><span class="main"><span class="t neg" style="display:block">Keluar</span><span class="s" style="display:block">Keluar dari akun di HP ini</span></span></button></div>
-  <p class="hint">Kasjo (Kasir Agen Hausjo) untuk agen BRILink, Mandiri Agen, BNI Agen46, BCA, BSI dan Mini ATM. Data tersimpan di server Kasjo, dan tetap bisa dicatat saat offline. Versi ${APP_VERSION} · <a href="https://kasjo.site/privasi.html" target="_blank" rel="noopener" style="color:var(--brand)">Kebijakan privasi</a></p>
+  <p class="hint">Kasjo (Kasir Agen Hausjo) untuk agen BRILink, Mandiri Agen, BNI Agen46, BCA, BSI dan Mini ATM. Data tersimpan di server Kasjo, dan tetap bisa dicatat saat offline. Versi ${APP_VERSION}${EDC?' · Aplikasi EDC '+esc(edcInfo().app||''):''} · <a href="https://kasjo.site/privasi.html" target="_blank" rel="noopener" style="color:var(--brand)">Kebijakan privasi</a></p>
   </div>`;
 }
 
@@ -1089,7 +1092,7 @@ function screenLainnya(){
 const OB_SLIDES=[
   {bg:'#0b4f4c',skip:'#fff',k:'Transaksi agen',h:'Catat tarik, transfer &amp; setor sekali tap',p:'Pilih jenis transaksi, isi nominal. Fee admin terisi otomatis, saldo kas &amp; bank langsung ikut berubah.'},
   {bg:'#12857d',skip:'#fff',k:'Laba &amp; saldo',h:'Laba harian kelihatan, uang laci tidak selisih',p:'Laba bersih, saldo tunai, bank &amp; deposit supplier dalam satu layar. Ada alarm kalau saldo menipis.'},
-  {bg:'#ff8a1f',skip:'#0b2e2c',k:'Kasir toko',h:'Sekalian jadi kasir warung kamu',p:'Scan barcode, stok berkurang sendiri, terima QRIS dan cetak struk lewat printer Bluetooth.'},
+  {bg:'#ff8a1f',skip:'#0b2e2c',k:'Kasir toko',h:'Sekalian jadi kasir warung kamu',p:'Scan barcode, stok berkurang sendiri, terima QRIS dan cetak struk lewat '+(EDC?'printer mesin EDC.':'printer Bluetooth.')},
   {bg:'#0b4f4c',skip:'',k:'Kasbon',h:'Kasbon pelanggan tertagih, tanpa sungkan',p:'Lihat siapa yang jatuh tempo, kirim pengingat sopan lewat WhatsApp sekali tap.'}];
 function screenLaunch(extra){
   return `<div class="ls" role="img" aria-label="KasJo, kasir dan pembukuan agen">
@@ -1220,7 +1223,7 @@ function waLink(t){
 // or by handing the receipt to the free RawBT app, which talks to almost any Bluetooth thermal printer.
 const PRN={dev:null,char:null,busy:false};
 const BLE_SERVICES=['000018f0-0000-1000-8000-00805f9b34fb','e7810a71-73ae-499d-8c15-faa9aef0c3f2','49535343-fe7d-4ae5-8fa9-9fafd205e455','0000ffe0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000fee7-0000-1000-8000-00805f9b34fb','0000ae30-0000-1000-8000-00805f9b34fb','0000ae00-0000-1000-8000-00805f9b34fb'];
-function prnCfg(){let c={};try{c=JSON.parse(localStorage.getItem('kasjo-printer')||'{}')||{}}catch(e){}return Object.assign({mode:navigator.bluetooth?'ble':'rawbt',width:32,auto:false,footer:'Terima kasih',name:''},c)}
+function prnCfg(){let c={};try{c=JSON.parse(localStorage.getItem('kasjo-printer')||'{}')||{}}catch(e){}const o=Object.assign({mode:EDC?'edc':navigator.bluetooth?'ble':'rawbt',width:32,auto:false,footer:'Terima kasih',name:''},c);if(o.mode==='edc'&&!EDC)o.mode=navigator.bluetooth?'ble':'rawbt';if(o.mode==='edc')o.width=32;return o}
 function savePrnCfg(c){try{localStorage.setItem('kasjo-printer',JSON.stringify(c))}catch(e){}}
 function ascii(s){return String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[–—]/g,'-').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[^\x20-\x7e]/g,'')}
 function wrapText(s,w){const out=[];let line='';for(const word of ascii(s).split(/\s+/).filter(Boolean)){let wd=word;while(wd.length>w){if(line){out.push(line);line=''}out.push(wd.slice(0,w));wd=wd.slice(w)}if(!line)line=wd;else if(line.length+1+wd.length<=w)line+=' '+wd;else{out.push(line);line=wd}}if(line)out.push(line);return out.length?out:['']}
@@ -1297,6 +1300,17 @@ function rawbtSend(bytes){
   let bin='';for(const x of bytes)bin+=String.fromCharCode(x);
   location.href='intent:base64,'+btoa(bin)+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
 }
+// Calls into the EDC app. Native methods return at once and answer later through __kasjoEdc.done(id, result).
+const EDC_WAIT={};let edcSeq=0;
+window.__kasjoEdc={done(id,r){const f=EDC_WAIT[id];if(!f)return;delete EDC_WAIT[id];let o=r;if(typeof r==='string'){try{o=JSON.parse(r)}catch(e){o={ok:false,msg:r}}}f(o||{ok:false})}};
+function edcCall(method,...args){return new Promise((res,rej)=>{if(!EDC||typeof EDC[method]!=='function')return rej(prnErr('Fitur ini butuh aplikasi Kasjo EDC versi terbaru.'));const id='c'+(++edcSeq);const timer=setTimeout(()=>{if(EDC_WAIT[id]){delete EDC_WAIT[id];rej(prnErr('Printer tidak merespons. Coba lagi.'))}},45000);EDC_WAIT[id]=r=>{clearTimeout(timer);res(r)};try{EDC[method](id,...args)}catch(e){clearTimeout(timer);delete EDC_WAIT[id];rej(prnErr('Aplikasi EDC tidak bisa dihubungi.'))}})}
+function edcInfo(){try{return JSON.parse(EDC.info())||{}}catch(e){return{}}}
+async function edcPrint(lines){
+  if(PRN.busy)throw prnErr('Printer sedang mencetak. Tunggu sebentar.');PRN.busy=true;
+  try{const r=await edcCall('printLines',JSON.stringify(lines.map(l=>({t:ascii(l.t),c:l.c?1:0,b:l.b?1:0,big:l.big?1:0}))),JSON.stringify({feed:150}));if(!r.ok)throw prnErr(r.msg||'Gagal mencetak.');return'edc'}
+  finally{PRN.busy=false}
+}
+async function printLines(lines,pick){if(prnCfg().mode==='edc')return edcPrint(lines);return printBytes(escpos(lines),pick)}
 async function printBytes(bytes,pick){
   const P=prnCfg();
   if(P.mode==='rawbt'){rawbtSend(bytes);return'rawbt'}
@@ -1305,24 +1319,24 @@ async function printBytes(bytes,pick){
   finally{PRN.busy=false}
 }
 async function printReceipt(t,pick){
-  try{const r=await printBytes(escpos(receiptLines(t,prnCfg().width)),pick);if(r==='ble')toast('Struk dicetak');if(r==='rawbt')toast('Membuka RawBT untuk mencetak')}
+  try{const r=await printLines(receiptLines(t,prnCfg().width),pick);if(r==='ble'||r==='edc')toast('Struk dicetak');if(r==='rawbt')toast('Membuka RawBT untuk mencetak')}
   catch(e){if(e&&e.name==='NotFoundError'&&!e.printer)return;toast(e&&e.printer?e.message:'Gagal mencetak. Pastikan printer menyala dan dekat, lalu coba lagi.');PRN.char=null}
   if(ui.sheet&&ui.sheet.type==='printer')renderSheet();
 }
 function testLines(w){return[{t:'Kasjo',c:1,b:1,big:1},{t:'Tes printer',c:1},{t:'-'.repeat(w)},...twoCol('Lebar kertas',w>=48?'80 mm':'58 mm',w).map(t=>({t})),...twoCol('Contoh nominal','Rp 1.500.000',w).map(t=>({t})),{t:'-'.repeat(w)},{t:'Printer siap dipakai',c:1,b:1}]}
 function sheetPrinter(){
-  const P=prnCfg(),bt=!!navigator.bluetooth,on=!!(PRN.char&&PRN.dev&&PRN.dev.gatt.connected);
+  const P=prnCfg(),bt=!!navigator.bluetooth,on=!!(PRN.char&&PRN.dev&&PRN.dev.gatt.connected),inf=EDC?edcInfo():null;
   return sheetWrap('Printer struk',`<div class="stack">
-  <div class="field"><span class="lbl">Cara mencetak</span><div class="seg"><button data-act="prn-mode" data-v="ble" aria-pressed="${P.mode==='ble'}">Bluetooth langsung</button><button data-act="prn-mode" data-v="rawbt" aria-pressed="${P.mode==='rawbt'}">Lewat aplikasi RawBT</button></div>
-  <span class="hint">${P.mode==='ble'?'Untuk printer Bluetooth Low Energy (BLE), langsung dari Chrome di Android atau laptop.'+(bt?'':' <b>Browser ini belum mendukung Bluetooth langsung.</b>'):'Untuk hampir semua printer Bluetooth thermal. Pasang aplikasi gratis <b>RawBT</b> dari Play Store, sambungkan printer di RawBT sekali, lalu cetak dari Kasjo.'}</span></div>
+  <div class="field"><span class="lbl">Cara mencetak</span><div class="seg">${EDC?`<button data-act="prn-mode" data-v="edc" aria-pressed="${P.mode==='edc'}">Printer bawaan EDC</button>`:`<button data-act="prn-mode" data-v="ble" aria-pressed="${P.mode==='ble'}">Bluetooth langsung</button>`}<button data-act="prn-mode" data-v="rawbt" aria-pressed="${P.mode==='rawbt'}">Lewat aplikasi RawBT</button></div>
+  <span class="hint">${P.mode==='edc'?'Mencetak langsung ke printer di mesin EDC PAX ini (kertas 58 mm).':P.mode==='ble'?'Untuk printer Bluetooth Low Energy (BLE), langsung dari Chrome di Android atau laptop.'+(bt?'':' <b>Browser ini belum mendukung Bluetooth langsung.</b>'):'Untuk hampir semua printer Bluetooth thermal. Pasang aplikasi gratis <b>RawBT</b> dari Play Store, sambungkan printer di RawBT sekali, lalu cetak dari Kasjo.'}</span></div>
   ${P.mode==='ble'?`<div class="effect"><div class="e"><span>Status</span><b class="${on?'pos':''}">${on?'Tersambung: '+esc(PRN.dev.name||'Printer'):P.name?'Belum tersambung ('+esc(P.name)+')':'Belum ada printer'}</b></div></div>
   <button class="btn pri block" data-act="prn-connect" ${bt?'':'disabled'}>${P.name?'Ganti / sambungkan printer':'Sambungkan printer'}</button>`:''}
-  <div class="field"><span class="lbl">Lebar kertas</span><div class="seg"><button data-act="prn-width" data-v="32" aria-pressed="${P.width!==48}">58 mm</button><button data-act="prn-width" data-v="48" aria-pressed="${P.width===48}">80 mm</button></div></div>
+  ${P.mode==='edc'?`<div class="effect"><div class="e"><span>Mesin</span><b>${esc(inf.model||'EDC PAX')}</b></div><div class="e"><span>Printer</span><b class="${inf.printer?'pos':''}">${inf.printer?'Siap dipakai':'Tidak terdeteksi'}</b></div></div>`:`<div class="field"><span class="lbl">Lebar kertas</span><div class="seg"><button data-act="prn-width" data-v="32" aria-pressed="${P.width!==48}">58 mm</button><button data-act="prn-width" data-v="48" aria-pressed="${P.width===48}">80 mm</button></div></div>`}
   <div class="field"><label for="prn-footer">Tulisan di bawah struk</label><input id="prn-footer" class="inp" maxlength="80" data-prn="footer" value="${esc(P.footer)}" placeholder="Terima kasih"></div>
   <div class="field"><span class="lbl">Cetak otomatis setelah simpan</span><div class="seg"><button data-act="prn-auto" data-v="0" aria-pressed="${!P.auto}">Tidak</button><button data-act="prn-auto" data-v="1" aria-pressed="${!!P.auto}">Ya</button></div>
-  <span class="hint">${P.mode==='ble'?'Struk tercetak sendiri setiap transaksi disimpan, selama printer tersambung.':'RawBT terbuka sendiri setiap transaksi disimpan.'}</span></div>
-  <button class="btn ghost block" data-act="prn-test">Cetak tes</button>
-  <p class="hint" style="margin:0">Pengaturan printer tersimpan di HP ini saja. iPhone belum bisa mencetak ke printer Bluetooth dari browser: kirim struk lewat WhatsApp.</p></div>`);
+  <span class="hint">${P.mode==='edc'?'Struk tercetak sendiri setiap transaksi disimpan.':P.mode==='ble'?'Struk tercetak sendiri setiap transaksi disimpan, selama printer tersambung.':'RawBT terbuka sendiri setiap transaksi disimpan.'}</span></div>
+  <button class="btn ghost block" data-act="prn-test">Cetak tes</button>${P.mode==='edc'?'<button class="btn ghost block" data-act="prn-feed">Keluarkan kertas</button>':''}
+  <p class="hint" style="margin:0">${EDC?'Pengaturan printer tersimpan di mesin ini saja.':'Pengaturan printer tersimpan di HP ini saja. iPhone'} ${EDC?'':'belum bisa mencetak ke printer Bluetooth dari browser: kirim struk lewat WhatsApp.'}</p></div>`);
 }
 function sheetReceipt(t,isNew){
   if(!t)return sheetWrap('Transaksi','<div class="empty">Transaksi ini sudah dihapus.</div>');
@@ -1666,15 +1680,16 @@ const handlers={
     const saved=await putTrx(t);ui.lastTrx=saved;
     Object.assign(ui.form,{amount:0,fee:feeFor(f.type,0),feeAuto:true,cost:0,cust:'',note:''});
     renderMain();openSheet('receipt',{id:saved.id,isNew:true});warnIfCrossed(before);
-    const P=prnCfg();if(P.auto&&(P.mode==='rawbt'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
+    const P=prnCfg();if(P.auto&&(P.mode==='rawbt'||P.mode==='edc'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
   }),
   trx:(el)=>openSheet('receipt',{id:el.dataset.id}),
   'print-receipt':(el)=>{const t=state.trx.find(x=>x.id===el.dataset.id)||ui.lastTrx;if(t)printReceipt(t,false)},
   'prn-mode':(el,v)=>{const P=prnCfg();P.mode=v;savePrnCfg(P);renderSheet()},
   'prn-width':(el,v)=>{const P=prnCfg();P.width=+v;savePrnCfg(P);renderSheet()},
+  'prn-feed':async()=>{try{const r=await edcCall('feed',120);if(!r.ok)toast(r.msg||'Gagal mengeluarkan kertas.')}catch(e){toast(e.message)}},
   'prn-auto':(el,v)=>{const P=prnCfg();P.auto=v==='1';savePrnCfg(P);renderSheet()},
   'prn-connect':async()=>{try{await bleConnect(true);toast('Printer tersambung')}catch(e){if(!(e&&e.name==='NotFoundError'&&!e.printer))toast(e&&e.printer?e.message:'Printer tidak bisa disambungkan. Nyalakan printer, dekatkan, lalu coba lagi.')}renderSheet()},
-  'prn-test':async()=>{try{const r=await printBytes(escpos(testLines(prnCfg().width)),false);if(r==='ble')toast('Tes dicetak')}catch(e){if(!(e&&e.name==='NotFoundError'&&!e.printer))toast(e&&e.printer?e.message:'Gagal mencetak tes.');PRN.char=null}renderSheet()},
+  'prn-test':async()=>{try{const r=await printLines(testLines(prnCfg().width),false);if(r==='ble'||r==='edc')toast('Tes dicetak')}catch(e){if(!(e&&e.name==='NotFoundError'&&!e.printer))toast(e&&e.printer?e.message:'Gagal mencetak tes.');PRN.char=null}renderSheet()},
   'copy-receipt':(el)=>{const t=state.trx.find(x=>x.id===el.dataset.id)||ui.lastTrx;copyText(receiptText(t),$('#receipt'))},
   confirm:(el,v)=>{ui.confirm=v;renderSheet()},
   'confirm-no':()=>{ui.confirm=null;renderSheet()},
@@ -1790,7 +1805,7 @@ const handlers={
     const saved=await putTrx(t);ui.lastTrx=saved;
     Object.assign(ui.pos,{cart:[],given:0,cust:'',kbId:'',kbName:'',q:''});
     renderMain();openSheet('receipt',{id:saved.id,isNew:true});warnIfCrossed(before);
-    const Pc=prnCfg();if(Pc.auto&&(Pc.mode==='rawbt'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
+    const Pc=prnCfg();if(Pc.auto&&(Pc.mode==='rawbt'||Pc.mode==='edc'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
   }),
   'prod-new':()=>{ui.prod={id:null,name:'',cat:'pulsa',digital:true,price:0,cost:0,sup:(suppliers()[0]||{}).id||'',min:'3',barcode:''};ui.newSup='';openSheet('product')},
   'prod-edit':(el)=>{const p=state.product.find(x=>x.id===el.dataset.id);if(!p)return;ui.prod=Object.assign({min:'3',barcode:'',sup:''},clone(p),{min:p.min==null?'3':String(p.min)});ui.newSup='';openSheet('product')},
@@ -1919,7 +1934,7 @@ document.addEventListener('submit',e=>{
     state.me.user.mustChange=false;saveCache();ui.pin={current:'',next:'',next2:'',err:''};render();toast('PIN baru tersimpan');
   });
 });
-function saveFile(name,blob){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},2000)}
+function saveFile(name,blob){if(EDC&&typeof EDC.saveFile==='function'){const fr=new FileReader();fr.onload=()=>{edcCall('saveFile',name,blob.type||'application/octet-stream',String(fr.result).split(',')[1]||'').then(r=>toast(r.ok?'Tersimpan di folder Download: '+name:(r.msg||'File tidak bisa disimpan.'))).catch(e=>toast(e.message))};fr.readAsDataURL(blob);return}const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},2000)}
 async function exportCsv(){
   const R=reportData();
   const head=['Tanggal','Jam','Jenis','Rekening','Nominal','Fee','Biaya bank','Laba','Kas tunai','Pelanggan','Item','Catatan'];

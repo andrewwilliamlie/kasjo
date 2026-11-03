@@ -1,0 +1,59 @@
+plugins { id 'com.android.application' }
+
+// Real PAX NeptuneLite SDK if its jar is in app/libs, otherwise compile against pax-stub (printer then unavailable).
+def paxJars = fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+def hasPaxSdk = !paxJars.isEmpty()
+
+// Release signing: the Kasjo EDC keystore (separate from the Play keystore), from environment variables.
+def ksFile = System.getenv('KASJO_EDC_KEYSTORE')
+
+android {
+    namespace 'site.kasjo.edc'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'site.kasjo.edc'   // permanent once the app is on PAXSTORE
+        minSdk 22
+        targetSdk 34
+        versionCode 1
+        versionName '1.0.0'
+        buildConfigField 'boolean', 'HAS_PAX_SDK', hasPaxSdk ? 'true' : 'false'
+        buildConfigField 'String', 'START_URL', '"https://app.kasjo.site/?src=pax"'
+        buildConfigField 'String', 'APP_HOST', '"app.kasjo.site"'
+    }
+
+    buildFeatures { buildConfig true }
+    lint { abortOnError false; checkReleaseBuilds false }
+
+    signingConfigs {
+        if (ksFile && new File(ksFile).exists()) {
+            release {
+                storeFile new File(ksFile)
+                storePassword System.getenv('KASJO_EDC_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KASJO_EDC_KEY_ALIAS')
+                keyPassword System.getenv('KASJO_EDC_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (signingConfigs.findByName('release')) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    applicationVariants.all { v ->
+        v.outputs.all { outputFileName = "kasjo-edc-${v.versionName}-${v.buildType.name}${hasPaxSdk ? '' : '-noprinter'}.apk" }
+    }
+}
+
+dependencies {
+    if (hasPaxSdk) implementation paxJars
+    else compileOnly project(':pax-stub')
+}

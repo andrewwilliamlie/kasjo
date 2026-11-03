@@ -1,0 +1,65 @@
+# Builds the Kasjo EDC app (android-edc/) for PAX terminals. The APKs appear under the run's "Artifacts".
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   PAX_SDK_JAR_B64            base64 of the PAX NeptuneLite jar (without it the APK is built with no printer)
+#   KASJO_EDC_KEYSTORE_B64     base64 of the Kasjo EDC release keystore (optional; release APK only when set)
+#   KASJO_EDC_KEYSTORE_PASSWORD, KASJO_EDC_KEY_ALIAS, KASJO_EDC_KEY_PASSWORD
+name: Kasjo EDC app
+
+on:
+  push:
+    branches: [main]
+    paths: ['android-edc/**', '.github/workflows/android-edc.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-edc
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: PAX SDK
+        env:
+          PAX_SDK_JAR_B64: ${{ secrets.PAX_SDK_JAR_B64 }}
+        run: |
+          if [ -n "$PAX_SDK_JAR_B64" ]; then
+            echo "$PAX_SDK_JAR_B64" | base64 -d > app/libs/NeptuneLiteApi.jar
+            echo "PAX SDK jar added ($(stat -c %s app/libs/NeptuneLiteApi.jar) bytes)"
+          else
+            echo "::warning::PAX_SDK_JAR_B64 is not set: building without the built-in printer"
+          fi
+
+      - name: Release keystore
+        env:
+          KS: ${{ secrets.KASJO_EDC_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/kasjo-edc.keystore"
+            echo "KASJO_EDC_KEYSTORE=$RUNNER_TEMP/kasjo-edc.keystore" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build
+        env:
+          KASJO_EDC_KEYSTORE_PASSWORD: ${{ secrets.KASJO_EDC_KEYSTORE_PASSWORD }}
+          KASJO_EDC_KEY_ALIAS: ${{ secrets.KASJO_EDC_KEY_ALIAS }}
+          KASJO_EDC_KEY_PASSWORD: ${{ secrets.KASJO_EDC_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KASJO_EDC_KEYSTORE" ]; then gradle --no-daemon assembleDebug assembleRelease; else gradle --no-daemon assembleDebug; fi
+          rm -f app/libs/*.jar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kasjo-edc-apk
+          path: android-edc/app/build/outputs/apk/**/*.apk
+          retention-days: 30

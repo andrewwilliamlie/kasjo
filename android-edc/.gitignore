@@ -1,0 +1,8 @@
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+# The PAX SDK is licensed to HausJo: keep it out of this public repo (CI gets it from a secret)
+app/libs/*.jar
+app/libs/*.aar

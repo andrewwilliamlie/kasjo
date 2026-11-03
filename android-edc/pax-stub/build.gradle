@@ -1,0 +1,8 @@
+// Compile-only stand-in for the PAX NeptuneLite SDK (same class and method names), used when the real jar is absent.
+plugins { id 'com.android.library' }
+android {
+    namespace 'com.pax.stub'
+    compileSdk 35
+    defaultConfig { minSdk 22 }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+}
