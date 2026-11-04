@@ -9,7 +9,7 @@ def ksFile = System.getenv('KASJO_EDC_KEYSTORE')
 
 android {
     namespace 'site.kasjo.edc'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId 'site.kasjo.edc'   // permanent once the app is on PAXSTORE
