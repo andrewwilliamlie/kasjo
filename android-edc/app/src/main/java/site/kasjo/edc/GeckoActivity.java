@@ -145,10 +145,7 @@ public class GeckoActivity extends Activity {
                 r.complete(core.info());
                 return r;
             }
-            core.run(() -> {
-                final JSONObject out = core.handle(m);
-                runOnUiThread(() -> r.complete(out));
-            });
+            core.submit(m.optString("m"), () -> core.handle(m), out -> runOnUiThread(() -> r.complete(out)));
             return r;
         }
     }

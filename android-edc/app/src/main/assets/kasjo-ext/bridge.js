@@ -27,7 +27,8 @@
   refreshInfo(10);
 
   const api = new page.Object();
-  exportFunction(() => info, api, { defineAs: "info" });
+  // info() must answer at once: return the last known state and refresh it in the background
+  exportFunction(() => { refreshInfo(0); return info; }, api, { defineAs: "info" });
   exportFunction((id, lines, opts) => call("printLines", id, { lines: String(lines), opts: String(opts || "") }), api, { defineAs: "printLines" });
   exportFunction((id) => call("printerStatus", id, {}), api, { defineAs: "printerStatus" });
   exportFunction((id, dots) => call("feed", id, { dots: Number(dots) || 120 }), api, { defineAs: "feed" });

@@ -53,15 +53,45 @@ final class PaxPrinter {
         this.context = context.getApplicationContext();
     }
 
-    /** Creating the DAL is slow, so it is done once, on first use. */
-    private IPrinter printer() throws Exception {
-        if (printer == null) {
-            if (!BuildConfig.HAS_PAX_SDK) throw new IllegalStateException("PAX SDK not in this build");
-            IDAL dal = NeptuneLiteUser.getInstance().getDal(context);
-            if (dal == null) throw new IllegalStateException("PAX DAL unavailable");
-            printer = dal.getPrinter();
-            if (printer == null) throw new IllegalStateException("PAX printer unavailable");
+    /** Shared by every PaxPrinter: PAX's demo creates the DAL once per app, on the main thread. */
+    private static volatile IPrinter shared;
+    /** Last problem, shown in Lainnya → Printer struk so support can see what went wrong. */
+    static volatile String lastError = "";
+    static volatile String dalState = "belum";
+
+    /** Connects to the PAX printer service. Call once on the main thread (as PAX's demo app does). */
+    static synchronized void connect(Context c) {
+        if (shared != null) return;
+        if (!BuildConfig.HAS_PAX_SDK) { dalState = "tanpa SDK"; return; }
+        long t0 = System.currentTimeMillis();
+        try {
+            IDAL dal = NeptuneLiteUser.getInstance().getDal(c.getApplicationContext());
+            if (dal == null) throw new IllegalStateException("getDal() = null");
+            IPrinter p = dal.getPrinter();
+            if (p == null) throw new IllegalStateException("getPrinter() = null");
+            shared = p;
+            dalState = "ok (" + (System.currentTimeMillis() - t0) + " ms)";
+        } catch (Throwable t) {
+            dalState = "gagal";
+            lastError = describe(t);
+            Log.e(TAG, "getDal", t);
         }
+    }
+
+    /** Forget the connection after a hang so the next call connects again. */
+    static synchronized void reset() { shared = null; dalState = "diulang"; }
+
+    static String describe(Throwable t) {
+        String m = t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
+        Throwable c = t.getCause();
+        if (c != null && c != t) m += " / " + c.getClass().getSimpleName() + (c.getMessage() == null ? "" : ": " + c.getMessage());
+        return m.length() > 200 ? m.substring(0, 200) : m;
+    }
+
+    private IPrinter printer() throws Exception {
+        if (shared == null) connect(context);
+        if (shared == null) throw new IllegalStateException(lastError.isEmpty() ? "PAX printer unavailable" : lastError);
+        printer = shared;
         return printer;
     }
 
@@ -108,6 +138,7 @@ final class PaxPrinter {
     }
 
     private static int code(Throwable t) {
+        lastError = describe(t);
         return (t instanceof IllegalStateException || t instanceof UnsupportedOperationException
                 || t instanceof LinkageError) ? NO_SDK : EXCEPTION;
     }
@@ -168,8 +199,8 @@ final class PaxPrinter {
             case -5: return "Tutup printer terbuka. Tutup dulu lalu coba lagi.";
             case -6: return "Pemotong kertas macet.";
             case -16: return "Pencetakan belum selesai. Coba lagi.";
-            case NO_SDK: return "Printer bawaan tidak tersedia di aplikasi atau mesin ini.";
-            case EXCEPTION: return "Printer error. Coba lagi.";
+            case NO_SDK: return "Printer bawaan tidak tersedia di aplikasi atau mesin ini." + (lastError.isEmpty() ? "" : " (" + lastError + ")");
+            case EXCEPTION: return "Printer error. Coba lagi." + (lastError.isEmpty() ? "" : " (" + lastError + ")");
             default: return "Printer error (kode " + status + ").";
         }
     }

@@ -21,6 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
 /**
  * What the web app can ask the EDC app to do, shared by both engines (system WebView and GeckoView).
@@ -31,19 +38,51 @@ final class EdcCore {
     final String engine;
     private final Activity activity;
     private final PaxPrinter printer;
-    private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    private volatile ExecutorService worker = Executors.newSingleThreadExecutor();
+    private final ScheduledExecutorService watchdog = Executors.newSingleThreadScheduledExecutor();
     private volatile Boolean printerOk = null;
+
+    /** A print that takes longer than this is treated as hung: the agent gets an answer and can try again. */
+    static final int TIMEOUT_S = 20;
+
+    interface Task { JSONObject run(); }
+    interface Reply { void send(JSONObject r); }
 
     EdcCore(Activity activity, String engine) {
         this.activity = activity;
         this.engine = engine;
         this.printer = new PaxPrinter(activity);
-        worker.execute(() -> printerOk = printer.available());
+        // Connect to the PAX service on the main thread shortly after start, like PAX's demo app.
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            PaxPrinter.connect(activity);
+            printerOk = printer.available();
+            Log.i("KasjoEDC", "PAX DAL " + PaxPrinter.dalState + " " + PaxPrinter.lastError);
+        }, 400);
     }
 
-    void run(Runnable r) { worker.execute(r); }
+    /** Runs a printer/file task on the worker thread; always replies once, at the latest after TIMEOUT_S. */
+    void submit(final String what, final Task task, final Reply reply) {
+        final AtomicBoolean done = new AtomicBoolean(false);
+        final ExecutorService w = worker;
+        w.execute(() -> {
+            JSONObject r;
+            try { r = task.run(); }
+            catch (Throwable t) { PaxPrinter.lastError = PaxPrinter.describe(t); r = fail("Printer error. (" + PaxPrinter.lastError + ")"); }
+            if (done.compareAndSet(false, true)) reply.send(r);
+        });
+        watchdog.schedule(() -> {
+            if (!done.compareAndSet(false, true)) return;
+            PaxPrinter.lastError = what + ": tidak ada jawaban " + TIMEOUT_S + " dtk (DAL " + PaxPrinter.dalState + ")";
+            Log.e("KasjoEDC", PaxPrinter.lastError);
+            // abandon the stuck thread and connection; the next call starts fresh
+            worker = Executors.newSingleThreadExecutor();
+            w.shutdownNow();
+            PaxPrinter.reset();
+            reply.send(fail("Printer tidak merespons. Matikan lalu nyalakan lagi mesin EDC, kemudian coba lagi."));
+        }, TIMEOUT_S, TimeUnit.SECONDS);
+    }
 
-    void shutdown() { worker.shutdownNow(); }
+    void shutdown() { worker.shutdownNow(); watchdog.shutdownNow(); }
 
     JSONObject info() {
         JSONObject o = new JSONObject();
@@ -58,6 +97,8 @@ final class EdcCore {
             o.put("paxSdk", BuildConfig.HAS_PAX_SDK);
             o.put("printer", Boolean.TRUE.equals(printerOk));
             o.put("lineWidth", PaxPrinter.LINE_WIDTH);
+            o.put("dal", PaxPrinter.dalState);
+            o.put("err", PaxPrinter.lastError);
         } catch (Exception ignored) { }
         return o;
     }

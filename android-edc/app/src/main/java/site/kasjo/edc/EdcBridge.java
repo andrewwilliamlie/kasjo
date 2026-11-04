@@ -35,19 +35,19 @@ final class EdcBridge {
     @JavascriptInterface
     public void printLines(final String id, final String linesJson, final String optsJson) {
         if (!trusted) { reply(id, EdcCore.fail("Tidak diizinkan.")); return; }
-        core.run(() -> reply(id, core.printLines(linesJson, optsJson)));
+        core.submit("print", () -> core.printLines(linesJson, optsJson), r -> reply(id, r));
     }
 
     @JavascriptInterface
     public void printerStatus(final String id) {
         if (!trusted) { reply(id, EdcCore.fail("Tidak diizinkan.")); return; }
-        core.run(() -> reply(id, core.printerStatus()));
+        core.submit("status", core::printerStatus, r -> reply(id, r));
     }
 
     @JavascriptInterface
     public void feed(final String id, final int dots) {
         if (!trusted) { reply(id, EdcCore.fail("Tidak diizinkan.")); return; }
-        core.run(() -> reply(id, core.feed(dots)));
+        core.submit("feed", () -> core.feed(dots), r -> reply(id, r));
     }
 
     @JavascriptInterface
@@ -58,7 +58,7 @@ final class EdcBridge {
             reply(id, EdcCore.fail("Izinkan akses penyimpanan, lalu unduh lagi."));
             return;
         }
-        core.run(() -> reply(id, core.saveFile(name, mime, base64)));
+        core.submit("file", () -> core.saveFile(name, mime, base64), r -> reply(id, r));
     }
 
     private void reply(String id, JSONObject r) {
