@@ -55,7 +55,7 @@ public class GeckoActivity extends Activity {
     private boolean canGoBack = false;
 
     private FilePrompt filePrompt;
-    private GeckoResult<PromptResponse> fileResult;
+    private Once<PromptResponse> fileResult;
     private GeckoSession.PermissionDelegate.Callback androidPermsCallback;
 
     @Override
@@ -118,6 +118,13 @@ public class GeckoActivity extends Activity {
         super.onDestroy();
     }
 
+    /** A GeckoResult that is completed only once (dialogs can fire both click and dismiss). */
+    private static final class Once<T> {
+        final GeckoResult<T> result = new GeckoResult<>();
+        private boolean done;
+        void complete(T v) { if (done) return; done = true; result.complete(v); }
+    }
+
     // ------------------------------------------------------------------ bridge
 
     private final class Bridge implements WebExtension.MessageDelegate {
@@ -157,7 +164,7 @@ public class GeckoActivity extends Activity {
             String url = req.uri;
             Uri u = Uri.parse(url);
             if (Edc.isAppUrl(u)) {
-                if (req.target == LoadRequest.TARGET_WINDOW_NEW) { s.loadUri(url); return GeckoResult.deny(); }
+                if (req.target == TARGET_WINDOW_NEW) { s.loadUri(url); return GeckoResult.deny(); }
                 return GeckoResult.allow();
             }
             if (url.startsWith("data:") || url.startsWith("about:") || url.startsWith("resource:")) return GeckoResult.allow();
@@ -198,10 +205,10 @@ public class GeckoActivity extends Activity {
 
         @Override
         public GeckoResult<PromptResponse> onChoicePrompt(GeckoSession s, final ChoicePrompt prompt) {
-            final GeckoResult<PromptResponse> res = new GeckoResult<>();
+            final Once<PromptResponse> res = new Once<>();
             final List<ChoicePrompt.Choice> flat = new ArrayList<>();
             flatten(prompt.choices, flat);
-            if (flat.isEmpty()) { res.complete(prompt.dismiss()); return res; }
+            if (flat.isEmpty()) { res.complete(prompt.dismiss()); return res.result; }
             String[] labels = new String[flat.size()];
             int checked = -1;
             for (int i = 0; i < flat.size(); i++) {
@@ -213,11 +220,11 @@ public class GeckoActivity extends Activity {
                 ChoicePrompt.Choice c = flat.get(which);
                 if (c.disabled) return;
                 d.dismiss();
-                if (!res.isComplete()) res.complete(prompt.confirm(c));
+                res.complete(prompt.confirm(c));
             });
-            b.setOnCancelListener(d -> { if (!res.isComplete()) res.complete(prompt.dismiss()); });
+            b.setOnCancelListener(d -> { res.complete(prompt.dismiss()); });
             b.show();
-            return res;
+            return res.result;
         }
 
         private void flatten(ChoicePrompt.Choice[] in, List<ChoicePrompt.Choice> out) {
@@ -230,26 +237,26 @@ public class GeckoActivity extends Activity {
 
         @Override
         public GeckoResult<PromptResponse> onDateTimePrompt(GeckoSession s, final DateTimePrompt prompt) {
-            final GeckoResult<PromptResponse> res = new GeckoResult<>();
-            if (prompt.type != DateTimePrompt.Type.DATE) { res.complete(prompt.dismiss()); return res; }
+            final Once<PromptResponse> res = new Once<>();
+            if (prompt.type != DateTimePrompt.Type.DATE) { res.complete(prompt.dismiss()); return res.result; }
             Calendar c = Calendar.getInstance();
             String v = prompt.defaultValue;
             if (v != null && v.matches("\\d{4}-\\d{2}-\\d{2}")) {
                 c.set(Integer.parseInt(v.substring(0, 4)), Integer.parseInt(v.substring(5, 7)) - 1, Integer.parseInt(v.substring(8, 10)));
             }
             DatePickerDialog d = new DatePickerDialog(GeckoActivity.this, (dp, y, mo, day) -> {
-                if (!res.isComplete()) res.complete(prompt.confirm(String.format(Locale.US, "%04d-%02d-%02d", y, mo + 1, day)));
+                res.complete(prompt.confirm(String.format(Locale.US, "%04d-%02d-%02d", y, mo + 1, day)));
             }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-            d.setOnCancelListener(x -> { if (!res.isComplete()) res.complete(prompt.dismiss()); });
-            d.setOnDismissListener(x -> { if (!res.isComplete()) res.complete(prompt.dismiss()); });
+            d.setOnCancelListener(x -> { res.complete(prompt.dismiss()); });
+            d.setOnDismissListener(x -> { res.complete(prompt.dismiss()); });
             d.show();
-            return res;
+            return res.result;
         }
 
         @Override
         public GeckoResult<PromptResponse> onFilePrompt(GeckoSession s, FilePrompt prompt) {
-            final GeckoResult<PromptResponse> res = new GeckoResult<>();
-            if (fileResult != null && !fileResult.isComplete()) fileResult.complete(filePrompt.dismiss());
+            final Once<PromptResponse> res = new Once<>();
+            if (fileResult != null) fileResult.complete(filePrompt.dismiss());
             Intent i = new Intent(Intent.ACTION_GET_CONTENT);
             i.addCategory(Intent.CATEGORY_OPENABLE);
             String mime = "*/*";
@@ -269,30 +276,30 @@ public class GeckoActivity extends Activity {
                 fileResult = null;
                 res.complete(prompt.dismiss());
             }
-            return res;
+            return res.result;
         }
 
         @Override
         public GeckoResult<PromptResponse> onAlertPrompt(GeckoSession s, final AlertPrompt prompt) {
-            final GeckoResult<PromptResponse> res = new GeckoResult<>();
+            final Once<PromptResponse> res = new Once<>();
             new AlertDialog.Builder(GeckoActivity.this)
                     .setMessage(prompt.message)
-                    .setPositiveButton("OK", (d, w) -> { if (!res.isComplete()) res.complete(prompt.dismiss()); })
-                    .setOnCancelListener(d -> { if (!res.isComplete()) res.complete(prompt.dismiss()); })
+                    .setPositiveButton("OK", (d, w) -> { res.complete(prompt.dismiss()); })
+                    .setOnCancelListener(d -> { res.complete(prompt.dismiss()); })
                     .show();
-            return res;
+            return res.result;
         }
 
         @Override
         public GeckoResult<PromptResponse> onButtonPrompt(GeckoSession s, final ButtonPrompt prompt) {
-            final GeckoResult<PromptResponse> res = new GeckoResult<>();
+            final Once<PromptResponse> res = new Once<>();
             new AlertDialog.Builder(GeckoActivity.this)
                     .setMessage(prompt.message)
-                    .setPositiveButton("OK", (d, w) -> { if (!res.isComplete()) res.complete(prompt.confirm(ButtonPrompt.Type.POSITIVE)); })
-                    .setNegativeButton("Batal", (d, w) -> { if (!res.isComplete()) res.complete(prompt.confirm(ButtonPrompt.Type.NEGATIVE)); })
-                    .setOnCancelListener(d -> { if (!res.isComplete()) res.complete(prompt.dismiss()); })
+                    .setPositiveButton("OK", (d, w) -> { res.complete(prompt.confirm(ButtonPrompt.Type.POSITIVE)); })
+                    .setNegativeButton("Batal", (d, w) -> { res.complete(prompt.confirm(ButtonPrompt.Type.NEGATIVE)); })
+                    .setOnCancelListener(d -> { res.complete(prompt.dismiss()); })
                     .show();
-            return res;
+            return res.result;
         }
     }
 
@@ -336,7 +343,7 @@ public class GeckoActivity extends Activity {
     @Override
     protected void onActivityResult(int req, int result, Intent data) {
         if (req == Edc.REQ_FILE && fileResult != null) {
-            GeckoResult<PromptResponse> res = fileResult;
+            Once<PromptResponse> res = fileResult;
             FilePrompt prompt = filePrompt;
             fileResult = null;
             filePrompt = null;
