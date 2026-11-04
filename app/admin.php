@@ -164,7 +164,7 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
     $endArgs = [];
     $ending = $c("SELECT COUNT(*) $endSql", $endArgs);
     $stats = [
-        'Toko' => number_format($c('SELECT COUNT(*) FROM toko'), 0, ',', '.'),
+        'Toko' => number_format($c("SELECT COUNT(*) FROM toko WHERE name <> '(akun dihapus)'"), 0, ',', '.'),
         'Berlangganan aktif' => number_format($c('SELECT COUNT(*) FROM toko WHERE paid_until > ?', [$now]), 0, ',', '.'),
         'Masa uji coba' => number_format($c('SELECT COUNT(*) FROM toko WHERE paid_until <= ? AND trial_until > ?', [$now, $now]), 0, ',', '.'),
         'Menunggu konfirmasi' => number_format($waiting, 0, ',', '.'),
@@ -246,20 +246,36 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
   </section>
 
 <?php else:
+    // All tokos, 30 per page, newest first; optional search and status filter.
+    $per = 30; $pg = max(1, (int)($_GET['p'] ?? 1));
+    $f = in_array($_GET['f'] ?? '', ['trial', 'paid', 'habis', 'off'], true) ? $_GET['f'] : '';
+    $end = '(CASE WHEN t.paid_until > t.trial_until THEN t.paid_until ELSE t.trial_until END)'; $n = (int)$now;
+    $where = ["t.name <> '(akun dihapus)'"]; $args = [];
+    if ($f === 'trial') $where[] = "t.disabled = 0 AND t.paid_until <= $n AND t.trial_until > $n";
+    elseif ($f === 'paid') $where[] = "t.disabled = 0 AND t.paid_until > $n";
+    elseif ($f === 'habis') $where[] = "t.disabled = 0 AND $end <= $n";
+    elseif ($f === 'off') $where[] = 't.disabled = 1';
     if ($q !== '') {
         $like = '%' . str_replace(['%', '_'], ['\%', '\_'], mb_strtolower($q)) . '%';
         $ph = '%' . (norm_phone($q) ?: '#') . '%';
-        $st = db()->prepare('SELECT DISTINCT t.* FROM toko t LEFT JOIN users u ON u.toko_id = t.id WHERE LOWER(t.name) LIKE ? OR u.phone LIKE ? OR LOWER(u.name) LIKE ? ORDER BY t.id DESC LIMIT 50');
-        $st->execute([$like, $ph, $like]);
-    } else {
-        $st = db()->query('SELECT * FROM toko ORDER BY id DESC LIMIT 30');
+        $where[] = '(LOWER(t.name) LIKE ? OR EXISTS (SELECT 1 FROM users u WHERE u.toko_id = t.id AND (u.phone LIKE ? OR LOWER(u.name) LIKE ?)))';
+        array_push($args, $like, $ph, $like);
     }
-    $tokos = $st->fetchAll();
+    $w = implode(' AND ', $where);
+    $total = $c("SELECT COUNT(*) FROM toko t WHERE $w", $args);
+    $pages = max(1, (int)ceil($total / $per)); $pg = min($pg, $pages);
+    $st = db()->prepare("SELECT t.* FROM toko t WHERE $w ORDER BY t.id DESC LIMIT $per OFFSET " . (($pg - 1) * $per));
+    $st->execute($args); $tokos = $st->fetchAll();
+    $link = fn(array $over) => '?' . http_build_query(array_filter(array_merge(['tab' => 'toko', 'q' => $q, 'f' => $f, 'p' => $pg], $over), fn($v) => $v !== '' && $v !== null && $v !== 1));
+    $fl = ['' => 'Semua', 'trial' => 'Uji coba', 'paid' => 'Berlangganan', 'habis' => 'Habis', 'off' => 'Nonaktif'];
     $usersOf = db()->prepare('SELECT * FROM users WHERE toko_id = ? ORDER BY CASE role WHEN \'owner\' THEN 0 WHEN \'manager\' THEN 1 ELSE 2 END, name');
     $trxOf = db()->prepare("SELECT COUNT(*) FROM records WHERE toko_id = ? AND kind = 'trx' AND deleted = 0");
 ?>
-  <section class="card"><form method="get"><input type="hidden" name="tab" value="toko"><label for="q">Cari toko (nama toko, nama orang, atau nomor WhatsApp)</label>
+  <section class="card"><form method="get"><input type="hidden" name="tab" value="toko"><?php if ($f): ?><input type="hidden" name="f" value="<?= h($f) ?>"><?php endif; ?><label for="q">Cari toko (nama toko, nama orang, atau nomor WhatsApp)</label>
     <div style="display:flex;gap:8px;margin-top:6px"><input id="q" name="q" value="<?= h($q) ?>" placeholder="0812xxxx atau nama toko"><button type="submit">Cari</button></div></form>
+  <nav class="tabs" style="margin-top:12px"><?php foreach ($fl as $k => $lbl): ?><a href="<?= h($link(['f' => $k, 'p' => 1])) ?>" class="<?= $f === $k ? 'on' : '' ?>"><?= h($lbl) ?></a><?php endforeach; ?></nav>
+  <?php $pager = '<div class="acts" style="justify-content:space-between;margin-top:12px"><span style="color:var(--muted);font-size:13px">' . ($total ? 'Menampilkan ' . (($pg - 1) * $per + 1) . '–' . min($total, $pg * $per) . ' dari ' . number_format($total, 0, ',', '.') . ' toko' : 'Tidak ada toko') . '</span><span style="display:flex;gap:8px">'
+      . ($pg > 1 ? '<a href="' . h($link(['p' => $pg - 1])) . '">‹ Sebelumnya</a>' : '') . ($pages > 1 ? '<span>Halaman ' . $pg . ' / ' . $pages . '</span>' : '') . ($pg < $pages ? '<a href="' . h($link(['p' => $pg + 1])) . '">Berikutnya ›</a>' : '') . '</span></div>'; echo $pager; ?>
   <div class="scroll" style="margin-top:12px"><table><thead><tr><th>Toko</th><th>Pengguna</th><th>Transaksi</th><th>Langganan</th></tr></thead><tbody>
   <?php foreach ($tokos as $t): $usersOf->execute([$t['id']]); $us = $usersOf->fetchAll(); $trxOf->execute([$t['id']]); ?>
     <tr><td><b><?= h($t['name']) ?></b><br><small>Daftar <?= h($fmtD($t['created_at'])) ?></small><br><?= $t['disabled'] ? '<span class="pill off">Toko nonaktif</span>' : '' ?>
@@ -274,6 +290,7 @@ details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
       <td><?= $statusPill($t) ?><form method="post" class="acts"><?= $hidden($t['id'], 'extend') ?><input name="days" type="number" min="1" max="400" value="30" style="width:80px" aria-label="Jumlah hari"><button type="submit" class="sec">+ hari</button></form></td></tr>
   <?php endforeach; if (!$tokos): ?><tr><td colspan="4">Tidak ada toko yang cocok.</td></tr><?php endif; ?>
   </tbody></table></div>
+  <?= $pager ?>
   <p style="color:var(--muted);font-size:13px">Sebelum reset PIN, pastikan yang meminta benar orangnya, misalnya chat dari nomor WhatsApp yang terdaftar. "+ hari" memperpanjang langganan tanpa pembayaran (misal kompensasi atau promo).</p></section>
 <?php endif; endif; ?>
 </main></body></html>
