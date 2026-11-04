@@ -59,7 +59,9 @@ jobs:
           KASJO_EDC_KEY_ALIAS: ${{ secrets.KASJO_EDC_KEY_ALIAS }}
           KASJO_EDC_KEY_PASSWORD: ${{ secrets.KASJO_EDC_KEY_PASSWORD }}
         run: |
+          gradle --no-daemon -q :app:dependencies --configuration debugRuntimeClasspath | grep -m1 -i "geckoview:geckoview" || true
           if [ -n "$KASJO_EDC_KEYSTORE" ]; then gradle --no-daemon assembleDebug assembleRelease; else gradle --no-daemon assembleDebug; fi
+          find app/build/outputs/apk -name "*.apk" -exec ls -la {} \;
           rm -f app/libs/*.jar
 
       - uses: actions/upload-artifact@v4
