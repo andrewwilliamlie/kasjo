@@ -1,21 +1,27 @@
 # Kasjo EDC (Android app for PAX terminals)
 
-A small Android app that opens the Kasjo web app (`https://app.kasjo.site/?src=pax`) in a WebView and gives it the terminal's built-in printer. Every Kasjo feature and fix still ships with a normal push to `main`; this app only needs a new build when the native part changes (printer bridge, icon, name).
+A small Android app that opens the Kasjo web app (`https://app.kasjo.site/?src=pax`) and gives it the terminal's built-in printer. Every Kasjo feature and fix still ships with a normal push to `main`; this app only needs a new build when the native part changes (printer bridge, icon, name).
 
 | | |
 |---|---|
 | Package | `site.kasjo.edc` (permanent once on PAXSTORE) |
 | Name | Kasjo EDC |
 | Terminals | PAX A920, A920 Pro, A620, A930 (no Google Play / Chrome) |
-| Android | 5.1+ (minSdk 22); the web app needs Android System WebView 80+, older shows an update notice |
+| Android | 5.1+ (minSdk 22), 32-bit ARM (`armeabi-v7a`) |
+| Engines | System WebView when it is Chrome **111+**, otherwise bundled **GeckoView 144.0.20251027123126** (Firefox engine; 144 is the last release for Android 5–7). APK ≈ 90 MB because of GeckoView |
 | Printer | PAX NeptuneLite SDK (V4.05.00), built-in fonts, 32 columns on 58 mm |
 
 The Google Play app (`site.kasjo.app.twa`) is separate and unchanged.
 
 ## How it fits together
-- `MainActivity` – WebView: JavaScript + storage, file picker (QRIS / payment proof), camera for barcode scanning, `wa.me` links opened straight in WhatsApp, `intent:` / other links handed to Android, back button = page back, offline page.
-- `EdcBridge` – `window.KasjoEDC` for the web app, only while the page is `https://app.kasjo.site`:
-  - `info()` → JSON `{app, model, android, printer, …}`
+Why two engines: the web app needs CSS `color-mix()` (Chrome 111), flex `gap` and modern JavaScript. PAX terminals often ship an old, non-updatable WebView (the A620 has **53**), so those get GeckoView. Don't raise GeckoView past 144 while Android 7 terminals are in use.
+
+- `LauncherActivity` – reads the system WebView version and opens `MainActivity` (WebView) or `GeckoActivity`.
+- `GeckoActivity` – GeckoView with its own `<select>` list, date picker, file picker, camera permission (back camera), links, back button, offline page. `window.KasjoEDC` comes from the built-in extension `assets/kasjo-ext/` (content script on app.kasjo.site → native messaging app `kasjo`). Its `info()` is cached from the app right after page start.
+- `EdcCore` – printer and file saving shared by both engines.
+- `MainActivity` – system WebView: JavaScript + storage, file picker (QRIS / payment proof), camera for barcode scanning, `wa.me` links opened straight in WhatsApp, `intent:` / other links handed to Android, back button = page back, offline page.
+- `EdcBridge` – `window.KasjoEDC` for the WebView engine (GeckoView: same methods via `bridge.js`), only while the page is `https://app.kasjo.site`:
+  - `info()` → JSON `{app, engine, model, android, printer, …}`
   - `printLines(id, linesJson, optsJson)` – lines `[{t, c, big}]` as made by `receiptLines()` in `app/index.html`
   - `printerStatus(id)`, `feed(id, dots)`
   - `saveFile(id, name, mime, base64)` – reports and backups to the Download folder (WebView cannot download `blob:` links)
