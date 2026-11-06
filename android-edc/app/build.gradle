@@ -15,8 +15,8 @@ android {
         applicationId 'site.kasjo.edc'   // permanent once the app is on PAXSTORE
         minSdk 22
         targetSdk 34
-        versionCode 3
-        versionName '1.1.1'
+        versionCode 4
+        versionName '1.2.0'
         // GeckoView (bundled engine) is 32-bit ARM only: runs on every PAX ARM terminal and keeps the APK small
         ndk { abiFilters 'armeabi-v7a' }
         buildConfigField 'boolean', 'HAS_PAX_SDK', hasPaxSdk ? 'true' : 'false'

@@ -309,7 +309,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.7.1';
+const APP_VERSION='1.8.0';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -1224,7 +1224,7 @@ function waLink(t){
 // or by handing the receipt to the free RawBT app, which talks to almost any Bluetooth thermal printer.
 const PRN={dev:null,char:null,busy:false};
 const BLE_SERVICES=['000018f0-0000-1000-8000-00805f9b34fb','e7810a71-73ae-499d-8c15-faa9aef0c3f2','49535343-fe7d-4ae5-8fa9-9fafd205e455','0000ffe0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000fee7-0000-1000-8000-00805f9b34fb','0000ae30-0000-1000-8000-00805f9b34fb','0000ae00-0000-1000-8000-00805f9b34fb'];
-function prnCfg(){let c={};try{c=JSON.parse(localStorage.getItem('kasjo-printer')||'{}')||{}}catch(e){}const o=Object.assign({mode:EDC?'edc':navigator.bluetooth?'ble':'rawbt',width:32,auto:false,footer:'Terima kasih',name:''},c);if(o.mode==='edc'&&!EDC)o.mode=navigator.bluetooth?'ble':'rawbt';if(o.mode==='edc')o.width=32;return o}
+function prnCfg(){let c={};try{c=JSON.parse(localStorage.getItem('kasjo-printer')||'{}')||{}}catch(e){}const o=Object.assign({mode:EDC?'edc':navigator.bluetooth?'ble':'rawbt',width:32,auto:false,footer:'Terima kasih',name:''},c);if((o.mode==='edc'||o.mode==='edcbt')&&!EDC)o.mode=navigator.bluetooth?'ble':'rawbt';if(o.mode==='edc')o.width=32;return o}
 function savePrnCfg(c){try{localStorage.setItem('kasjo-printer',JSON.stringify(c))}catch(e){}}
 function ascii(s){return String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[–—]/g,'-').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[^\x20-\x7e]/g,'')}
 function wrapText(s,w){const out=[];let line='';for(const word of ascii(s).split(/\s+/).filter(Boolean)){let wd=word;while(wd.length>w){if(line){out.push(line);line=''}out.push(wd.slice(0,w));wd=wd.slice(w)}if(!line)line=wd;else if(line.length+1+wd.length<=w)line+=' '+wd;else{out.push(line);line=wd}}if(line)out.push(line);return out.length?out:['']}
@@ -1311,7 +1311,21 @@ async function edcPrint(lines){
   try{const r=await edcCall('printLines',JSON.stringify(lines.map(l=>({t:ascii(l.t),c:l.c?1:0,b:l.b?1:0,big:l.big?1:0}))),JSON.stringify({feed:150}));if(!r.ok)throw prnErr(r.msg||'Gagal mencetak.');return'edc'}
   finally{PRN.busy=false}
 }
-async function printLines(lines,pick){if(prnCfg().mode==='edc')return edcPrint(lines);return printBytes(escpos(lines),pick)}
+// Bluetooth printer paired with the EDC (some terminals reach their built-in printer over Bluetooth)
+const BT_HINT=/print|inner|pax|pos|mpt|rpp|thermal|bt-?p|58|80/i;
+async function edcBtList(){const r=await edcCall('btList');if(!r.ok)throw prnErr(r.msg||'Daftar Bluetooth tidak bisa dibaca.');PRN.btList=r.devices||[];return PRN.btList}
+async function edcBtPrint(bytes){
+  if(PRN.busy)throw prnErr('Printer sedang mencetak. Tunggu sebentar.');PRN.busy=true;
+  try{
+    const P=prnCfg();
+    if(!P.btAddr){const list=await edcBtList();const pick=list.length===1?list[0]:list.find(d=>BT_HINT.test(d.name||''));
+      if(!pick)throw prnErr(list.length?'Pilih printer Bluetooth dulu di Lainnya → Printer struk.':'Belum ada printer Bluetooth yang dipasangkan. Buka Pengaturan → Bluetooth di mesin, pasangkan printer, lalu coba lagi.');
+      P.btAddr=pick.addr;P.btName=pick.name;savePrnCfg(P)}
+    let bin='';for(const x of bytes)bin+=String.fromCharCode(x);
+    const r=await edcCall('btPrint',P.btAddr,btoa(bin));if(!r.ok)throw prnErr(r.msg||'Gagal mencetak.');return'edc'
+  }finally{PRN.busy=false}
+}
+async function printLines(lines,pick){const m=prnCfg().mode;if(m==='edc')return edcPrint(lines);if(m==='edcbt')return edcBtPrint(escpos(lines));return printBytes(escpos(lines),pick)}
 async function printBytes(bytes,pick){
   const P=prnCfg();
   if(P.mode==='rawbt'){rawbtSend(bytes);return'rawbt'}
@@ -1328,14 +1342,17 @@ function testLines(w){return[{t:'Kasjo',c:1,b:1,big:1},{t:'Tes printer',c:1},{t:
 function sheetPrinter(){
   const P=prnCfg(),bt=!!navigator.bluetooth,on=!!(PRN.char&&PRN.dev&&PRN.dev.gatt.connected),inf=EDC?edcInfo():null;
   return sheetWrap('Printer struk',`<div class="stack">
-  <div class="field"><span class="lbl">Cara mencetak</span><div class="seg">${EDC?`<button data-act="prn-mode" data-v="edc" aria-pressed="${P.mode==='edc'}">Printer bawaan EDC</button>`:`<button data-act="prn-mode" data-v="ble" aria-pressed="${P.mode==='ble'}">Bluetooth langsung</button>`}<button data-act="prn-mode" data-v="rawbt" aria-pressed="${P.mode==='rawbt'}">Lewat aplikasi RawBT</button></div>
-  <span class="hint">${P.mode==='edc'?'Mencetak langsung ke printer di mesin EDC PAX ini (kertas 58 mm).':P.mode==='ble'?'Untuk printer Bluetooth Low Energy (BLE), langsung dari Chrome di Android atau laptop.'+(bt?'':' <b>Browser ini belum mendukung Bluetooth langsung.</b>'):'Untuk hampir semua printer Bluetooth thermal. Pasang aplikasi gratis <b>RawBT</b> dari Play Store, sambungkan printer di RawBT sekali, lalu cetak dari Kasjo.'}</span></div>
+  <div class="field"><span class="lbl">Cara mencetak</span><div class="seg">${EDC?`<button data-act="prn-mode" data-v="edc" aria-pressed="${P.mode==='edc'}">Printer bawaan EDC</button><button data-act="prn-mode" data-v="edcbt" aria-pressed="${P.mode==='edcbt'}">Bluetooth EDC</button>`:`<button data-act="prn-mode" data-v="ble" aria-pressed="${P.mode==='ble'}">Bluetooth langsung</button>`}<button data-act="prn-mode" data-v="rawbt" aria-pressed="${P.mode==='rawbt'}">Lewat aplikasi RawBT</button></div>
+  <span class="hint">${P.mode==='edc'?'Mencetak langsung ke printer di mesin EDC PAX ini (kertas 58 mm).':P.mode==='edcbt'?'Untuk mesin yang printernya tersambung lewat Bluetooth, atau printer Bluetooth terpisah. Pasangkan printer dulu di Pengaturan → Bluetooth mesin, lalu pilih di bawah.':P.mode==='ble'?'Untuk printer Bluetooth Low Energy (BLE), langsung dari Chrome di Android atau laptop.'+(bt?'':' <b>Browser ini belum mendukung Bluetooth langsung.</b>'):'Untuk hampir semua printer Bluetooth thermal. Pasang aplikasi gratis <b>RawBT</b> dari Play Store, sambungkan printer di RawBT sekali, lalu cetak dari Kasjo.'}</span></div>
   ${P.mode==='ble'?`<div class="effect"><div class="e"><span>Status</span><b class="${on?'pos':''}">${on?'Tersambung: '+esc(PRN.dev.name||'Printer'):P.name?'Belum tersambung ('+esc(P.name)+')':'Belum ada printer'}</b></div></div>
   <button class="btn pri block" data-act="prn-connect" ${bt?'':'disabled'}>${P.name?'Ganti / sambungkan printer':'Sambungkan printer'}</button>`:''}
+  ${P.mode==='edcbt'?`<div class="effect"><div class="e"><span>Printer</span><b class="${P.btAddr?'pos':''}">${P.btAddr?esc(P.btName||P.btAddr):'Belum dipilih'}</b></div></div>
+  ${(PRN.btList||[]).length?`<div class="field"><span class="lbl">Printer Bluetooth yang sudah dipasangkan</span>${PRN.btList.map(d=>`<button class="btn ${d.addr===P.btAddr?'pri':'ghost'} block" data-act="prn-btpick" data-v="${esc(d.addr)}" data-n="${esc(d.name||d.addr)}">${esc(d.name||d.addr)} <span style="opacity:.6;font-size:12px">${esc(d.addr)}</span></button>`).join('')}</div>`:''}
+  <button class="btn ${P.btAddr?'ghost':'pri'} block" data-act="prn-btlist">${(PRN.btList||[]).length?'Muat ulang daftar':'Cari printer yang sudah dipasangkan'}</button>`:''}
   ${P.mode==='edc'?`<div class="effect"><div class="e"><span>Mesin</span><b>${esc(inf.model||'EDC PAX')}</b></div><div class="e"><span>Printer</span><b class="${inf.printer?'pos':''}">${inf.printer?'Siap dipakai':'Tidak terdeteksi'}</b></div></div><p class="hint" style="margin:0;font-size:12px;word-break:break-word">Info support: aplikasi ${esc(inf.app||'?')} · ${inf.engine==='gecko'?'GeckoView':'WebView'} · Android ${esc(inf.android||'?')} · SDK ${inf.paxSdk?'ada':'tidak ada'} · layanan printer ${esc(inf.dal||'?')}${inf.err?' · <b>'+esc(inf.err)+'</b>':''}</p>`:`<div class="field"><span class="lbl">Lebar kertas</span><div class="seg"><button data-act="prn-width" data-v="32" aria-pressed="${P.width!==48}">58 mm</button><button data-act="prn-width" data-v="48" aria-pressed="${P.width===48}">80 mm</button></div></div>`}
   <div class="field"><label for="prn-footer">Tulisan di bawah struk</label><input id="prn-footer" class="inp" maxlength="80" data-prn="footer" value="${esc(P.footer)}" placeholder="Terima kasih"></div>
   <div class="field"><span class="lbl">Cetak otomatis setelah simpan</span><div class="seg"><button data-act="prn-auto" data-v="0" aria-pressed="${!P.auto}">Tidak</button><button data-act="prn-auto" data-v="1" aria-pressed="${!!P.auto}">Ya</button></div>
-  <span class="hint">${P.mode==='edc'?'Struk tercetak sendiri setiap transaksi disimpan.':P.mode==='ble'?'Struk tercetak sendiri setiap transaksi disimpan, selama printer tersambung.':'RawBT terbuka sendiri setiap transaksi disimpan.'}</span></div>
+  <span class="hint">${P.mode==='edc'||P.mode==='edcbt'?'Struk tercetak sendiri setiap transaksi disimpan.':P.mode==='ble'?'Struk tercetak sendiri setiap transaksi disimpan, selama printer tersambung.':'RawBT terbuka sendiri setiap transaksi disimpan.'}</span></div>
   <button class="btn ghost block" data-act="prn-test">Cetak tes</button>${P.mode==='edc'?'<button class="btn ghost block" data-act="prn-feed">Keluarkan kertas</button>':''}
   <p class="hint" style="margin:0">${EDC?'Pengaturan printer tersimpan di mesin ini saja.':'Pengaturan printer tersimpan di HP ini saja. iPhone'} ${EDC?'':'belum bisa mencetak ke printer Bluetooth dari browser: kirim struk lewat WhatsApp.'}</p></div>`);
 }
@@ -1681,12 +1698,14 @@ const handlers={
     const saved=await putTrx(t);ui.lastTrx=saved;
     Object.assign(ui.form,{amount:0,fee:feeFor(f.type,0),feeAuto:true,cost:0,cust:'',note:''});
     renderMain();openSheet('receipt',{id:saved.id,isNew:true});warnIfCrossed(before);
-    const P=prnCfg();if(P.auto&&(P.mode==='rawbt'||P.mode==='edc'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
+    const P=prnCfg();if(P.auto&&(P.mode==='rawbt'||P.mode==='edc'||P.mode==='edcbt'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
   }),
   trx:(el)=>openSheet('receipt',{id:el.dataset.id}),
   'print-receipt':(el)=>{const t=state.trx.find(x=>x.id===el.dataset.id)||ui.lastTrx;if(t)printReceipt(t,false)},
-  'prn-mode':(el,v)=>{const P=prnCfg();P.mode=v;savePrnCfg(P);renderSheet()},
+  'prn-mode':(el,v)=>{const P=prnCfg();P.mode=v;savePrnCfg(P);renderSheet();if(v==='edcbt'&&!(PRN.btList||[]).length)edcBtList().then(()=>renderSheet()).catch(()=>{})},
   'prn-width':(el,v)=>{const P=prnCfg();P.width=+v;savePrnCfg(P);renderSheet()},
+  'prn-btlist':async()=>{try{const l=await edcBtList();if(!l.length)toast('Belum ada perangkat Bluetooth yang dipasangkan. Pasangkan printer di Pengaturan → Bluetooth mesin.');renderSheet()}catch(e){toast(e.message)}},
+  'prn-btpick':(el,v)=>{const P=prnCfg();P.btAddr=v;P.btName=el.dataset.n||v;savePrnCfg(P);renderSheet()},
   'prn-feed':async()=>{try{const r=await edcCall('feed',120);if(!r.ok)toast(r.msg||'Gagal mengeluarkan kertas.')}catch(e){toast(e.message)}},
   'prn-auto':(el,v)=>{const P=prnCfg();P.auto=v==='1';savePrnCfg(P);renderSheet()},
   'prn-connect':async()=>{try{await bleConnect(true);toast('Printer tersambung')}catch(e){if(!(e&&e.name==='NotFoundError'&&!e.printer))toast(e&&e.printer?e.message:'Printer tidak bisa disambungkan. Nyalakan printer, dekatkan, lalu coba lagi.')}renderSheet()},
@@ -1806,7 +1825,7 @@ const handlers={
     const saved=await putTrx(t);ui.lastTrx=saved;
     Object.assign(ui.pos,{cart:[],given:0,cust:'',kbId:'',kbName:'',q:''});
     renderMain();openSheet('receipt',{id:saved.id,isNew:true});warnIfCrossed(before);
-    const Pc=prnCfg();if(Pc.auto&&(Pc.mode==='rawbt'||Pc.mode==='edc'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
+    const Pc=prnCfg();if(Pc.auto&&(Pc.mode==='rawbt'||Pc.mode==='edc'||Pc.mode==='edcbt'||(PRN.char&&PRN.dev&&PRN.dev.gatt.connected)))printReceipt(saved,false);
   }),
   'prod-new':()=>{ui.prod={id:null,name:'',cat:'pulsa',digital:true,price:0,cost:0,sup:(suppliers()[0]||{}).id||'',min:'3',barcode:''};ui.newSup='';openSheet('product')},
   'prod-edit':(el)=>{const p=state.product.find(x=>x.id===el.dataset.id);if(!p)return;ui.prod=Object.assign({min:'3',barcode:'',sup:''},clone(p),{min:p.min==null?'3':String(p.min)});ui.newSup='';openSheet('product')},

@@ -131,6 +131,17 @@ final class EdcCore {
 
     JSONObject feed(int dots) { return result(printer.feed(dots)); }
 
+    JSONObject btPrint(String addr, String base64) {
+        try { return BtPrinter.print(addr, Base64.decode(base64 == null ? "" : base64, Base64.DEFAULT)); }
+        catch (IllegalArgumentException e) { return fail("Data struk tidak bisa dibaca."); }
+    }
+
+    /** Android 12+ asks for "Nearby devices" before Bluetooth can be used. Call on the UI thread. */
+    boolean needsBtPermission() {
+        return Build.VERSION.SDK_INT >= 31
+                && activity.checkSelfPermission("android.permission.BLUETOOTH_CONNECT") != PackageManager.PERMISSION_GRANTED;
+    }
+
     /** Saves a report (CSV, backup) to the Download folder. */
     JSONObject saveFile(String name, String mime, String base64) {
         String safe = name == null ? "kasjo" : name.replaceAll("[^A-Za-z0-9._ -]", "_");
@@ -165,6 +176,8 @@ final class EdcCore {
             case "printerStatus": return printerStatus();
             case "feed": return feed(m.optInt("dots", 120));
             case "saveFile": return saveFile(m.optString("name"), m.optString("mime"), m.optString("data"));
+            case "btList": return BtPrinter.list();
+            case "btPrint": return btPrint(m.optString("addr"), m.optString("data"));
             default: return fail("Perintah tidak dikenal.");
         }
     }

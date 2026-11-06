@@ -61,6 +61,20 @@ final class EdcBridge {
         core.submit("file", () -> core.saveFile(name, mime, base64), r -> reply(id, r));
     }
 
+    @JavascriptInterface
+    public void btList(final String id) {
+        if (!trusted) { reply(id, EdcCore.fail("Tidak diizinkan.")); return; }
+        if (core.needsBtPermission()) { activity.runOnUiThread(() -> Edc.askBtPermission(activity)); reply(id, EdcCore.fail("Izinkan akses Bluetooth, lalu coba lagi.")); return; }
+        core.submit("btList", BtPrinter::list, r -> reply(id, r));
+    }
+
+    @JavascriptInterface
+    public void btPrint(final String id, final String addr, final String base64) {
+        if (!trusted) { reply(id, EdcCore.fail("Tidak diizinkan.")); return; }
+        if (core.needsBtPermission()) { activity.runOnUiThread(() -> Edc.askBtPermission(activity)); reply(id, EdcCore.fail("Izinkan akses Bluetooth, lalu coba lagi.")); return; }
+        core.submit("btPrint", () -> core.btPrint(addr, base64), r -> reply(id, r));
+    }
+
     private void reply(String id, JSONObject r) {
         final String js = "window.__kasjoEdc&&window.__kasjoEdc.done(" + JSONObject.quote(id) + "," + r.toString() + ")";
         web.post(() -> web.evaluateJavascript(js, null));

@@ -23,7 +23,7 @@ final class Edc {
      */
     static final int MIN_WEBVIEW = 111;
 
-    static final int REQ_FILE = 11, REQ_CAMERA = 12, REQ_STORAGE = 13, REQ_ANDROID_PERMS = 14;
+    static final int REQ_FILE = 11, REQ_CAMERA = 12, REQ_STORAGE = 13, REQ_ANDROID_PERMS = 14, REQ_BT = 15;
 
     static boolean isAppUrl(Uri u) {
         return u != null && "https".equals(u.getScheme()) && BuildConfig.APP_HOST.equals(u.getHost());
@@ -52,6 +52,11 @@ final class Edc {
     static void askStoragePermission(Activity a) {
         if (Build.VERSION.SDK_INT >= 23 && Build.VERSION.SDK_INT < 29)
             a.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQ_STORAGE);
+    }
+
+    static void askBtPermission(Activity a) {
+        if (Build.VERSION.SDK_INT >= 31)
+            a.requestPermissions(new String[]{"android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_SCAN"}, REQ_BT);
     }
 
     static void toast(Context c, String m) { Toast.makeText(c, m, Toast.LENGTH_LONG).show(); }

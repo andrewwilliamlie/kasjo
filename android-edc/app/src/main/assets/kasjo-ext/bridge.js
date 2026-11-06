@@ -33,5 +33,7 @@
   exportFunction((id) => call("printerStatus", id, {}), api, { defineAs: "printerStatus" });
   exportFunction((id, dots) => call("feed", id, { dots: Number(dots) || 120 }), api, { defineAs: "feed" });
   exportFunction((id, name, mime, data) => call("saveFile", id, { name: String(name), mime: String(mime), data: String(data) }), api, { defineAs: "saveFile" });
+  exportFunction((id) => call("btList", id, {}), api, { defineAs: "btList" });
+  exportFunction((id, addr, data) => call("btPrint", id, { addr: String(addr), data: String(data) }), api, { defineAs: "btPrint" });
   page.KasjoEDC = api;
 })();

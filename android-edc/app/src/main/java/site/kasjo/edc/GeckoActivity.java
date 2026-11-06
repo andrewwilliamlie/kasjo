@@ -141,6 +141,11 @@ public class GeckoActivity extends Activity {
                 r.complete(EdcCore.fail("Izinkan akses penyimpanan, lalu unduh lagi."));
                 return r;
             }
+            if (m.optString("m").startsWith("bt") && core.needsBtPermission()) {
+                Edc.askBtPermission(GeckoActivity.this);
+                r.complete(EdcCore.fail("Izinkan akses Bluetooth, lalu coba lagi."));
+                return r;
+            }
             if ("info".equals(m.optString("m"))) {
                 r.complete(core.info());
                 return r;
