@@ -1,9 +1,10 @@
 {
   "manifest_version": 2,
   "name": "Kasjo EDC bridge",
-  "version": "1.0",
-  "description": "Gives app.kasjo.site the window.KasjoEDC object (built-in PAX printer) inside the Kasjo EDC app.",
+  "version": "1.1",
+  "description": "Gives app.kasjo.site the window.KasjoEDC object (printers, file saving) inside the Kasjo EDC app.",
   "browser_specific_settings": { "gecko": { "id": "edc-bridge@kasjo.site" } },
+  "background": { "scripts": ["background.js"] },
   "content_scripts": [
     { "matches": ["https://app.kasjo.site/*"], "js": ["bridge.js"], "run_at": "document_start", "all_frames": false }
   ],

@@ -309,7 +309,7 @@ tfoot td{font-weight:700}
 <script>
 (function(){
 "use strict";
-const APP_VERSION='1.8.0';
+const APP_VERSION='1.8.1';
 /* ---------- helpers ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const NF=new Intl.NumberFormat('id-ID');
@@ -1349,7 +1349,7 @@ function sheetPrinter(){
   ${P.mode==='edcbt'?`<div class="effect"><div class="e"><span>Printer</span><b class="${P.btAddr?'pos':''}">${P.btAddr?esc(P.btName||P.btAddr):'Belum dipilih'}</b></div></div>
   ${(PRN.btList||[]).length?`<div class="field"><span class="lbl">Printer Bluetooth yang sudah dipasangkan</span>${PRN.btList.map(d=>`<button class="btn ${d.addr===P.btAddr?'pri':'ghost'} block" data-act="prn-btpick" data-v="${esc(d.addr)}" data-n="${esc(d.name||d.addr)}">${esc(d.name||d.addr)} <span style="opacity:.6;font-size:12px">${esc(d.addr)}</span></button>`).join('')}</div>`:''}
   <button class="btn ${P.btAddr?'ghost':'pri'} block" data-act="prn-btlist">${(PRN.btList||[]).length?'Muat ulang daftar':'Cari printer yang sudah dipasangkan'}</button>`:''}
-  ${P.mode==='edc'?`<div class="effect"><div class="e"><span>Mesin</span><b>${esc(inf.model||'EDC PAX')}</b></div><div class="e"><span>Printer</span><b class="${inf.printer?'pos':''}">${inf.printer?'Siap dipakai':'Tidak terdeteksi'}</b></div></div><p class="hint" style="margin:0;font-size:12px;word-break:break-word">Info support: aplikasi ${esc(inf.app||'?')} · ${inf.engine==='gecko'?'GeckoView':'WebView'} · Android ${esc(inf.android||'?')} · SDK ${inf.paxSdk?'ada':'tidak ada'} · layanan printer ${esc(inf.dal||'?')}${inf.err?' · <b>'+esc(inf.err)+'</b>':''}</p>`:`<div class="field"><span class="lbl">Lebar kertas</span><div class="seg"><button data-act="prn-width" data-v="32" aria-pressed="${P.width!==48}">58 mm</button><button data-act="prn-width" data-v="48" aria-pressed="${P.width===48}">80 mm</button></div></div>`}
+  ${P.mode==='edc'?`<div class="effect"><div class="e"><span>Mesin</span><b>${esc(inf.model||'EDC PAX')}</b></div><div class="e"><span>Printer</span><b class="${inf.printer?'pos':''}">${inf.printer?'Siap dipakai':'Tidak terdeteksi'}</b></div></div><p class="hint" style="margin:0;font-size:12px;word-break:break-word">Info support: aplikasi ${esc(inf.app||'?')} · ${inf.engine==='gecko'?'GeckoView':'WebView'} · Android ${esc(inf.android||'?')} · SDK ${inf.paxSdk?'ada':'tidak ada'} · layanan printer ${esc(inf.dal||'?')}${inf.bridge?' · jembatan '+(inf.bridge==='ok'?'ok':'<b>'+esc(inf.bridge)+'</b>'):''}${inf.err?' · <b>'+esc(inf.err)+'</b>':''}</p>`:`<div class="field"><span class="lbl">Lebar kertas</span><div class="seg"><button data-act="prn-width" data-v="32" aria-pressed="${P.width!==48}">58 mm</button><button data-act="prn-width" data-v="48" aria-pressed="${P.width===48}">80 mm</button></div></div>`}
   <div class="field"><label for="prn-footer">Tulisan di bawah struk</label><input id="prn-footer" class="inp" maxlength="80" data-prn="footer" value="${esc(P.footer)}" placeholder="Terima kasih"></div>
   <div class="field"><span class="lbl">Cetak otomatis setelah simpan</span><div class="seg"><button data-act="prn-auto" data-v="0" aria-pressed="${!P.auto}">Tidak</button><button data-act="prn-auto" data-v="1" aria-pressed="${!!P.auto}">Ya</button></div>
   <span class="hint">${P.mode==='edc'||P.mode==='edcbt'?'Struk tercetak sendiri setiap transaksi disimpan.':P.mode==='ble'?'Struk tercetak sendiri setiap transaksi disimpan, selama printer tersambung.':'RawBT terbuka sendiri setiap transaksi disimpan.'}</span></div>

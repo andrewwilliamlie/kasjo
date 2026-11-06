@@ -90,7 +90,12 @@ public class GeckoActivity extends Activity {
         final String start = Edc.startUrl(getIntent());
         runtime.getWebExtensionController().ensureBuiltIn(EXT_URI, EXT_ID).accept(
                 ext -> {
-                    if (ext != null) session.getWebExtensionController().setMessageDelegate(ext, new Bridge(), "kasjo");
+                    if (ext != null) {
+                        Bridge b = new Bridge();
+                        ext.setMessageDelegate(b, "kasjo");                                   // from background.js
+                        session.getWebExtensionController().setMessageDelegate(ext, b, "kasjo"); // direct from content
+                        Log.i(TAG, "bridge extension ready " + ext.id);
+                    } else Log.e(TAG, "bridge extension null");
                     session.loadUri(start);
                 },
                 e -> {
@@ -131,7 +136,19 @@ public class GeckoActivity extends Activity {
         @Override
         public GeckoResult<Object> onMessage(String nativeApp, Object message, WebExtension.MessageSender sender) {
             final GeckoResult<Object> r = new GeckoResult<>();
-            if (!(message instanceof JSONObject) || !Edc.isAppUrl(Uri.parse(sender.url))) {
+            try {
+                return handleMessage(message, sender, r);
+            } catch (Throwable t) {
+                Log.e(TAG, "bridge message", t);
+                r.complete(EdcCore.fail("Jembatan EDC: " + PaxPrinter.describe(t)));
+                return r;
+            }
+        }
+
+        private GeckoResult<Object> handleMessage(Object message, WebExtension.MessageSender sender, final GeckoResult<Object> r) {
+            // Only our own built-in extension can reach this delegate; background.js checks the page is app.kasjo.site.
+            boolean ours = sender != null && sender.webExtension != null && EXT_ID.equals(sender.webExtension.id);
+            if (!(message instanceof JSONObject) || !ours) {
                 r.complete(EdcCore.fail("Tidak diizinkan."));
                 return r;
             }
