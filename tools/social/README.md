@@ -96,9 +96,11 @@ Instagram needs a public JPEG (≤ 8 MB, 4:5 to 1.91:1 for feed; 9:16 for story)
 ## Photo library (`photos/`)
 AI photos (no logos): kaget-laci-kasir, agen-hijab-tunjuk-hp, pelanggan-kasbon-canggung, wanita-kacamata-penasaran,
 ibu-warung-hp-kasir, agen-teriak-senang-koin, agen-panik-hp, ibu-pusing-buku-tulis, pemilik-hammock-santai,
-bapak-ngopi-pantau-hp, wanita-struk-panjang, pria-tidur-nyenyak. App screens: app-1-beranda, app-2-catat-transaksi,
+bapak-ngopi-pantau-hp, wanita-struk-panjang, pria-tidur-nyenyak (all posted by 17 Nov: do not reuse).
+Canva photos (17 Nov, for 18–24 Nov): ibu-pink-qris, pemuda-scan-barcode, ibu-hijau-cek-stok, kasir-rompi-jujur,
+pasangan-piknik, wanita-kacamata-laporan, bapak-batik-gajian. App screens: app-1-beranda, app-2-catat-transaksi,
 app-3-kasir-toko, app-4-struk, app-5-laporan-laba, app-6-kasbon. Logo: kasjo-icon.png.
 
 New AI photos: Canva `generate-image` works, but its full-size file cannot be downloaded from a session.
-If a topic really needs a new photo, generate it, give the owner the Canva link in the draft message and ask
-them to drop the downloaded file in the chat; otherwise reuse the library (different crop / layout).
+Generate a new photo per post, give the owner the Canva links and ask them to drop the downloaded files in the chat
+(or allow export-download.canva.com for the session). Do not reuse posted photos.

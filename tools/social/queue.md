@@ -3,15 +3,13 @@
 Status `approved` = pemilik sudah setuju; tugas terjadwal boleh langsung posting pada tanggalnya tanpa bertanya lagi.
 Status `draft` = belum disetujui, jangan posting.
 Gambar: `https://kasjo.site/social/<date>-<slug>-feed.jpg` dan `-story.jpg`.
-Caption Facebook = caption Instagram tanpa "(link di bio)".
+Caption Facebook = caption Instagram tanpa " (link di bio)".
 Setelah posting: ubah status jadi `posted`, tambah baris di posted.md, commit, push.
 
-Hashtag (semua): #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
-
 ## 2026-11-18 | qris-toko | status: draft
-Topik: QRIS toko tampil layar penuh + total | foto: ibu-warung-hp-kasir
+Topik: QRIS toko tampil layar penuh + total | foto: ibu-pink-qris
 ```
-Pembeli mau bayar QRIS? Gampang! 📲
+Pembeli: "Bisa bayar QRIS, Kak?" Bisa dong! 📲
 Di kasir KasJo, pilih bayar QRIS / Transfer, QRIS toko kamu tampil layar penuh bareng total belanjanya. Pembeli tinggal scan.
 
 🎁 Coba gratis 30 hari di kasjo.site (link di bio)
@@ -20,10 +18,10 @@ Di kasir KasJo, pilih bayar QRIS / Transfer, QRIS toko kamu tampil layar penuh b
 ```
 
 ## 2026-11-19 | scan-barcode | status: draft
-Topik: Scan barcode pakai kamera HP | foto: wanita-kacamata-penasaran
+Topik: Scan barcode pakai kamera HP | foto: pemuda-scan-barcode
 ```
-Scan barcode harus beli alat mahal? Gak juga! 🤓
-Di KasJo, cukup arahkan kamera HP ke barcode, barang langsung masuk keranjang. Punya scanner? Bisa dipakai juga.
+Scan barcode harus beli alat mahal? Cukup kamera HP! 🤳
+Di KasJo, arahkan kamera HP ke barcode, barang langsung masuk keranjang. Punya scanner? Bisa dipakai juga.
 
 🎁 Coba gratis 30 hari di kasjo.site (link di bio)
 
@@ -31,10 +29,10 @@ Di KasJo, cukup arahkan kamera HP ke barcode, barang langsung masuk keranjang. P
 ```
 
 ## 2026-11-20 | stok-barang | status: draft
-Topik: Stok barang kelihatan, berkurang otomatis | layar: app-3-kasir-toko
+Topik: Stok barang kelihatan, berkurang otomatis | foto: ibu-hijau-cek-stok
 ```
-Barang tinggal berapa, ya? Cek di HP aja! 📦
-Tiap barang terjual di kasir KasJo, stoknya auto berkurang. Jadi kelihatan mana yang perlu kulakan sebelum rak kosong.
+Rak mulai kosong, Bu? Cek stoknya di HP aja 📦
+Tiap barang terjual di kasir KasJo, stoknya auto berkurang. Jadi kelihatan mana yang perlu kulakan sebelum kehabisan.
 
 🎁 Coba gratis 30 hari di kasjo.site (link di bio)
 
@@ -42,31 +40,31 @@ Tiap barang terjual di kasir KasJo, stoknya auto berkurang. Jadi kelihatan mana 
 ```
 
 ## 2026-11-21 | kasir-anti-curang | status: draft
-Topik: Kasir gak bisa hapus/ubah transaksi + riwayat aktivitas | layar: app-2-catat-transaksi
+Topik: Kasir gak bisa hapus/ubah transaksi + riwayat aktivitas | foto: kasir-rompi-jujur
 ```
-Bos lagi gak di toko? Tetap aman! 🔒
-Di KasJo, kasir bisa catat dan jual, tapi gak bisa hapus atau ubah transaksi. Semua tercatat di riwayat aktivitas: siapa, apa, kapan.
+"Bos, saya cuma bisa catat & jual kok!" 🙋‍♀️
+Di KasJo, kasir bisa catat transaksi dan jual, tapi gak bisa hapus atau ubah. Semua tercatat di riwayat aktivitas: siapa, apa, kapan.
 
 🎁 Coba gratis 30 hari di kasjo.site (link di bio)
 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
 
-## 2026-11-22 | libur-cek-laba | status: draft
-Topik: Libur akhir pekan, cek laba dari rumah | foto: pemilik-hammock-santai
+## 2026-11-22 | piknik-toko-aman | status: draft
+Topik: Libur akhir pekan, pantau dari mana aja | foto: pasangan-piknik
 ```
-Minggu libur, toko tetap buka? Santai, bos 😎
-Laba, saldo, dan kasbon bisa dicek dari HP di mana aja. Kasir catat di toko, kamu pantau dari rumah.
+Minggu libur? Piknik dulu, toko aman! 🧺
+Kasir catat di toko, kamu cek laba, saldo, dan kasbon dari HP di mana aja.
 
 🎁 Coba gratis 30 hari di kasjo.site (link di bio)
 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
 
-## 2026-11-23 | laporan-sekali-tap | status: draft
-Topik: Laporan 7 hari & bulanan sekali tap | layar: app-5-laporan-laba
+## 2026-11-23 | laporan-senin | status: draft
+Topik: Laporan 7 hari & bulanan sekali tap | foto: wanita-kacamata-laporan
 ```
-Senin, waktunya rekap minggu kemarin 📊
+Senin pagi, rekap minggu lalu udah beres dong! ☕📊
 Di KasJo, laporan hari ini, 7 hari, bulan ini, dan bulan lalu tinggal tap. Laba bersih, total fee, sampai selisih kas langsung kelihatan.
 
 🎁 Coba gratis 30 hari di kasjo.site (link di bio)
@@ -75,9 +73,9 @@ Di KasJo, laporan hari ini, 7 hari, bulan ini, dan bulan lalu tinggal tap. Laba 
 ```
 
 ## 2026-11-24 | siap-gajian | status: draft
-Topik: Siapkan saldo sebelum ramai gajian | foto: kaget-laci-kasir
+Topik: Siapkan saldo sebelum ramai gajian | foto: bapak-batik-gajian
 ```
-Besok mulai gajian, antrean tarik tunai siap-siap panjang! 😱
+Besok mulai gajian, antrean tarik tunai bakal panjang! 💸
 Cek dulu kas laci dan saldo semua rekening di KasJo. Pasang batas minimum, nanti ada alarm "saldo menipis" sebelum kehabisan.
 
 🎁 Coba gratis 30 hari di kasjo.site (link di bio)
