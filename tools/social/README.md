@@ -17,7 +17,9 @@ Instagram needs a public JPEG (≤ 8 MB, 4:5 to 1.91:1 for feed; 9:16 for story)
 ## Daily routine (1 feed + 1 story)
 1. `git pull`, read `posted.md` (what is already out) and pick the next topic from the backlog below that
    is not in the log. Follow the date: holidays and paydays (25th–1st) beat the backlog order.
-2. Pick a photo from `photos/` not used in the last 7 posts (see log), or an app screenshot (`app-*.png`).
+2. **Owner preference (17 Nov):** posts with people perform best; keep posts without a person rare (max ~1 in 7).
+   **Never reuse a photo that was already posted** (check the Photo column in `posted.md`): generate a new one with
+   Canva `generate-image` (see Photo library). App screenshots can be added as a phone sticker on top of a photo.
 3. Copy a template from `templates/` into `work/<YYYY-MM-DD>/feed.html` and `story.html`
    (paths: `../../brand.css`, `../../photos/...`). Write new copy; keep the GoPay-Merchant-like style:
    one punchy question or problem on top, a big outlined **Lilita One** punchline in a starburst, stickers
