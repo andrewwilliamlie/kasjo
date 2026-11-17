@@ -1,0 +1,9 @@
+{
+  "name": "kasjo-social",
+  "private": true,
+  "description": "Render KasJo Instagram/Facebook posts. Playwright is preinstalled in Claude sessions.",
+  "dependencies": {
+    "@fontsource/lilita-one": "5.1.0",
+    "@fontsource/plus-jakarta-sans": "5.1.0"
+  }
+}
