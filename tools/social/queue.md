@@ -6,7 +6,7 @@ Gambar: `https://kasjo.site/social/<date>-<slug>-feed.jpg` dan `-story.jpg`.
 Caption Facebook = caption Instagram tanpa " (link di bio)".
 Setelah posting: ubah status jadi `posted`, tambah baris di posted.md, commit, push.
 
-## 2026-11-18 | qris-toko | status: approved
+## 2026-11-18 | qris-toko | status: posted
 Topik: QRIS toko tampil layar penuh + total | foto: ibu-pink-qris
 ```
 Pembeli: "Bisa bayar QRIS, Kak?" Bisa dong! 📲
