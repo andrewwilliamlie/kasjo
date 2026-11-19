@@ -19,3 +19,4 @@ Append one row per post. Topics here are done; do not repeat them within 60 days
 | 2026-11-17 | promo-12 | Tidur nyenyak (backup tiap malam) | pria-tidur-nyenyak | yes | yes | — |
 | 2026-11-17 | deposit-ppob | Saldo deposit supplier PPOB auto kepantau | agen-hijab-tunjuk-hp | yes | yes | yes |
 | 2026-11-18 | qris-toko | QRIS toko tampil layar penuh + total | ibu-pink-qris | yes | yes | yes |
+| 2026-11-19 | scan-barcode | Scan barcode pakai kamera HP | pemuda-scan-barcode | yes | yes | yes |

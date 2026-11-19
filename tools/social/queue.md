@@ -17,7 +17,7 @@ Di kasir KasJo, pilih bayar QRIS / Transfer, QRIS toko kamu tampil layar penuh b
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM #QRIS
 ```
 
-## 2026-11-19 | scan-barcode | status: approved
+## 2026-11-19 | scan-barcode | status: posted
 Topik: Scan barcode pakai kamera HP | foto: pemuda-scan-barcode
 ```
 Scan barcode harus beli alat mahal? Cukup kamera HP! 🤳
