@@ -28,7 +28,7 @@ Di KasJo, arahkan kamera HP ke barcode, barang langsung masuk keranjang. Punya s
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM #KasirWarung
 ```
 
-## 2026-11-20 | stok-barang | status: approved
+## 2026-11-20 | stok-barang | status: posted
 Topik: Stok barang kelihatan, berkurang otomatis | foto: ibu-hijau-cek-stok
 ```
 Rak mulai kosong, Bu? Cek stoknya di HP aja 📦
