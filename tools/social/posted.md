@@ -21,3 +21,4 @@ Append one row per post. Topics here are done; do not repeat them within 60 days
 | 2026-11-18 | qris-toko | QRIS toko tampil layar penuh + total | ibu-pink-qris | yes | yes | yes |
 | 2026-11-19 | scan-barcode | Scan barcode pakai kamera HP | pemuda-scan-barcode | yes | yes | yes |
 | 2026-11-20 | stok-barang | Stok barang kelihatan, berkurang otomatis | ibu-hijau-cek-stok | yes | yes | yes |
+| 2026-11-21 | kasir-anti-curang | Kasir gak bisa hapus/ubah transaksi + riwayat aktivitas | kasir-rompi-jujur | yes | yes | yes |

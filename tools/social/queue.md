@@ -39,7 +39,7 @@ Tiap barang terjual di kasir KasJo, stoknya auto berkurang. Jadi kelihatan mana 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM #StokBarang
 ```
 
-## 2026-11-21 | kasir-anti-curang | status: approved
+## 2026-11-21 | kasir-anti-curang | status: posted
 Topik: Kasir gak bisa hapus/ubah transaksi + riwayat aktivitas | foto: kasir-rompi-jujur
 ```
 "Bos, saya cuma bisa catat & jual kok!" 🙋‍♀️
