@@ -50,7 +50,7 @@ Di KasJo, kasir bisa catat transaksi dan jual, tapi gak bisa hapus atau ubah. Se
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
 
-## 2026-11-22 | piknik-toko-aman | status: approved
+## 2026-11-22 | piknik-toko-aman | status: posted
 Topik: Libur akhir pekan, pantau dari mana aja | foto: pasangan-piknik
 ```
 Minggu libur? Piknik dulu, toko aman! 🧺
