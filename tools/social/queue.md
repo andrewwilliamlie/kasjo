@@ -61,7 +61,7 @@ Kasir catat di toko, kamu cek laba, saldo, dan kasbon dari HP di mana aja.
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
 
-## 2026-11-23 | laporan-senin | status: approved
+## 2026-11-23 | laporan-senin | status: posted
 Topik: Laporan 7 hari & bulanan sekali tap | foto: wanita-kacamata-laporan
 ```
 Senin pagi, rekap minggu lalu udah beres dong! ☕📊
