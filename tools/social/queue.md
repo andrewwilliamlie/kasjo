@@ -72,7 +72,7 @@ Di KasJo, laporan hari ini, 7 hari, bulan ini, dan bulan lalu tinggal tap. Laba 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
 
-## 2026-11-24 | siap-gajian | status: approved
+## 2026-11-24 | siap-gajian | status: posted
 Topik: Siapkan saldo sebelum ramai gajian | foto: bapak-batik-gajian
 ```
 Besok mulai gajian, antrean tarik tunai bakal panjang! 💸

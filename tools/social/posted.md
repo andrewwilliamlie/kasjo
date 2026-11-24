@@ -24,3 +24,4 @@ Append one row per post. Topics here are done; do not repeat them within 60 days
 | 2026-11-21 | kasir-anti-curang | Kasir gak bisa hapus/ubah transaksi + riwayat aktivitas | kasir-rompi-jujur | yes | yes | yes |
 | 2026-11-22 | piknik-toko-aman | Libur akhir pekan, pantau dari mana aja | pasangan-piknik | yes | yes | yes |
 | 2026-11-23 | laporan-senin | Laporan 7 hari & bulanan sekali tap | wanita-kacamata-laporan | yes | yes | yes |
+| 2026-11-24 | siap-gajian | Siapkan saldo sebelum ramai gajian | bapak-batik-gajian | yes | yes | yes |
