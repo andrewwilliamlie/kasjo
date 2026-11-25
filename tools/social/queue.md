@@ -82,3 +82,14 @@ Cek dulu kas laci dan saldo semua rekening di KasJo. Pasang batas minimum, nanti
 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
+
+## 2026-11-25 | hari-guru-laba | status: draft
+Topik: Hari Guru: soal berhitung, laba agen & toko dipisah | foto: — (layar Laporan; foto Canva MAHb4vpTM1k belum bisa diunduh)
+```
+Selamat Hari Guru! 🍎 Soal hari ini: laba agen + laba toko − biaya = ?
+Gak usah pusing ngitung. Di laporan KasJo, laba agen dan laba toko dipisah, biaya operasional ikut dikurangi, laba bersih langsung kelihatan.
+
+🎁 Coba gratis 30 hari di kasjo.site (link di bio)
+
+#KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM #HariGuruNasional
+```
