@@ -93,3 +93,14 @@ Gak usah pusing ngitung. Di laporan KasJo, laba agen dan laba toko dipisah, biay
 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM #HariGuruNasional
 ```
+
+## 2026-11-26 | paket-tahunan | status: draft
+Topik: Abis gajian, langganan setahun Rp249rb (hemat Rp99rb vs bulanan) | foto: — (layar Beranda; foto Canva MAHb-otPsiY belum bisa diunduh)
+```
+Abis gajian, sekalian beresin langganan setahun! 💸
+Paket 1 tahun KasJo cuma Rp249.000. Kalau bulanan Rp29.000 × 12 = Rp348.000, jadi hemat Rp99.000. Catat transaksi agen, kasir warung, kasbon, sampai laporan laba, aman setahun penuh.
+
+🎁 Coba gratis 30 hari di kasjo.site (link di bio)
+
+#KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
+```
