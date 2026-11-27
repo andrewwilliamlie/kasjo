@@ -104,3 +104,14 @@ Paket 1 tahun KasJo cuma Rp249.000. Kalau bulanan Rp29.000 × 12 = Rp348.000, ja
 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
+
+## 2026-11-27 | tutup-kasir-pecahan | status: draft
+Topik: Abis ramai gajian, tutup kasir hitung laci per pecahan, selisih ketahuan | foto: — (kartu hitung pecahan; foto orang sudah dibuat di Canva MAHcEmYSdhk & Runway task 662d0243, belum bisa diunduh dari sesi)
+```
+Abis ramai gajian, uang di laci pas gak nih? 🤔💵
+Tutup kasir di KasJo: hitung laci per pecahan (100rb, 50rb, 20rb…), totalnya langsung dicocokkan sama catatan. Lebih atau kurang, auto ketahuan.
+
+🎁 Coba gratis 30 hari di kasjo.site (link di bio)
+
+#KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
+```
