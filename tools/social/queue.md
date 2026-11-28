@@ -115,3 +115,15 @@ Tutup kasir di KasJo: hitung laci per pecahan (100rb, 50rb, 20rb…), totalnya l
 
 #KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
 ```
+
+## 2026-11-28 | kuis-paling-cuan | status: draft
+Topik: Kuis akhir pekan abis gajian: transaksi mana paling cuan? (engagement, laporan laba) | foto: — (layar Laporan; foto orang Canva MAHcKhxrS0s belum bisa diunduh dari sesi)
+```
+Kuis akhir pekan abis gajian! 🧠 Transaksi mana yang paling cuan buat kamu?
+A. Tarik tunai  B. Transfer  C. Top up e-wallet  D. Bayar tagihan
+Jawab di komentar ya! Jawabannya beda tiap agen. Di KasJo, fee tiap transaksi tercatat otomatis, jadi laba harian, mingguan, sampai bulanan langsung kelihatan di laporan.
+
+🎁 Coba gratis 30 hari di kasjo.site (link di bio)
+
+#KasJo #HausJo #AgenBRILink #MiniATM #AgenLaku #CuanAgen #UMKM
+```
